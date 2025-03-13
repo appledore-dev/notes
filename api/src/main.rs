@@ -1,19 +1,16 @@
 use axum::{
-  	routing::{get, post},
+  	routing::post,
   	Json, Router,
 	http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, to_string};
+use serde_json::to_string;
 use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
   	let app = Router::new()
-		.route("/", get(
-			|| async { Json(json!({ "ping": 1 })) }
-		))
 		.route("/prompt", post(prompt));
 
   	let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
