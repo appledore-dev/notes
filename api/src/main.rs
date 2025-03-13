@@ -25,7 +25,7 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
                 role: "user".to_string(),
                 parts: vec![
                     AIPart {
-                        text: payload.context,
+                        text: format!("The selected text is: {}", payload.context),
                     },
                 ],
             },
@@ -35,9 +35,9 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
             parts: vec![
                 AIPart {
                     text: format!(concat!(
-                        "You are a helpful writing assistant. Please help the user to replace the context.\n\n",
+                        "You are a helpful writing assistant. Please help the user to replace the selected text.\n\n",
                         "Your task is: {}\n\n",
-                        "Make sure to provide only 1 option as a response."
+                        "Make sure to provide only exact 1 option as a response."
                     ), payload.prompt),
                 },
             ],
