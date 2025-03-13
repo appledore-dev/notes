@@ -33,12 +33,12 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
                 ],
             },
         ],
-        generationConfig: AIGenerationConfig {
+        generation_config: AIGenerationConfig {
             temperature: 0.7,
-            maxOutputTokens: 8192,
-            topP: 0.95,
-            topK: 40,
-            responseMimeType: "text/plain".to_string(),
+            max_output_tokens: 8192,
+            top_p: 0.95,
+            top_k: 40,
+            response_mime_type: "text/plain".to_string(),
         },
     };
 
@@ -50,7 +50,7 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
         .await;
 	let data = resp.unwrap().json::<AIResponse>().await.unwrap();
     let res = PromptResponse {
-		result: data.candidates[0].content.parts[0].text.clone(),
+		result: data.candidates[0].content.parts[0].text.to_string(),
 	};
 	(StatusCode::OK, Json(res))
 }
@@ -67,47 +67,55 @@ struct PromptResponse {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct AIRequest {
     contents: Vec<AIContent>,
-    generationConfig: AIGenerationConfig,
+    generation_config: AIGenerationConfig,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct AIContent {
     role: String,
     parts: Vec<AIPart>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct AIPart {
     text: String,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct AIGenerationConfig {
     temperature: f32,
-    maxOutputTokens: i32,
-    topP: f32,
-    topK: i32,
-    responseMimeType: String,
+    max_output_tokens: i32,
+    top_p: f32,
+    top_k: i32,
+    response_mime_type: String,
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct AIResponse {
     candidates: Vec<AICandidate>,
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct AICandidate {
     content: AIContentCandidate,
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct AIContentCandidate {
     parts: Vec<AIPartCandidate>,
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct AIPartCandidate {
     text: String,
 }
