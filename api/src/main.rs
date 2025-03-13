@@ -28,11 +28,19 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
                 role: "user".to_string(),
                 parts: vec![
                     AIPart {
-                        text: payload.prompt,
+                        text: payload.context,
                     },
                 ],
             },
         ],
+        system_instruction: AIContent {
+            role: "user".to_string(),
+            parts: vec![
+                AIPart {
+                    text: format!("You are a helpful writing assistant. Please help the user to replace the context.\n\nYour task is: {}\n\nMake sure to provide only 1 option as a response.", payload.prompt),
+                },
+            ],
+        },
         generation_config: AIGenerationConfig {
             temperature: 0.7,
             max_output_tokens: 8192,
@@ -70,6 +78,7 @@ struct PromptResponse {
 #[serde(rename_all = "camelCase")]
 struct AIRequest {
     contents: Vec<AIContent>,
+    system_instruction: AIContent,
     generation_config: AIGenerationConfig,
 }
 
