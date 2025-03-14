@@ -1,6 +1,9 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -63,6 +66,13 @@ export default function TiptapEditor({ value, onChange }: {
     }
   })
 
+  const getSelectionText = () => {
+    if (!editor) return ''
+    const { view, state } = editor
+    const { from, to } = view.state.selection
+    return state.doc.textBetween(from, to, '')
+  }
+
   return editor ? <div className="relative space-y-2 pt-2 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex gap-2 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5">
       <Select
@@ -119,11 +129,62 @@ export default function TiptapEditor({ value, onChange }: {
       }}>
         <QuoteIcon className="!size-3.5" />
       </Button>
-      <Button size="sm" variant={editor.isActive('link') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-        editor.chain().focus().toggleLink({ href: 'https://example.com' }).run()
+      {editor.isActive('link') ? <Button size="sm" variant="default" className="p-0 size-8" onClick={() => {
+        editor.chain().focus().unsetLink().run()
       }}>
-        {editor.isActive('link') ? <Link2OffIcon className="!size-3.5" /> : <Link2Icon className="!size-3.5" />}
-      </Button>
+        <Link2OffIcon className="!size-3.5" />
+      </Button> : <Popover>
+        <PopoverTrigger asChild>
+          <Button size="sm" variant="outline" className="p-0 size-8">
+            <Link2Icon className="!size-3.5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <form className="grid gap-4" onSubmit={e => {
+            e.preventDefault()
+            const data = Object.fromEntries(new FormData(e.currentTarget).entries())
+            if (editor.state.selection.empty) {
+              editor.commands.insertContent({
+                type: 'text',
+                text: data.link as string,
+                marks: [
+                  {
+                    type: 'link',
+                    attrs: {
+                      href: data.link,
+                    }
+                  }
+                ]
+              })
+            } else {
+              // replace the current link text with the new one
+              editor.commands.setLink({
+                href: data.link as string
+              })
+            }
+          }}>
+            <div className="grid gap-2">
+              <div className="grid grid-cols-1 items-center gap-2">
+                <Label htmlFor="tiptap-extension-link-url">URL</Label>
+                <Input
+                  id="tiptap-extension-link-url"
+                  defaultValue={editor.getAttributes('link').href}
+                  className="h-8"
+                  name="link"
+                  placeholder="https://example.com"
+                  required
+                  type="url"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-1">
+              <Button size="sm" variant="outline" type="submit">
+                {getSelectionText() ? 'Set' : 'Insert'} Link
+              </Button>
+            </div>
+          </form>
+        </PopoverContent>
+      </Popover>}
       <Separator orientation="vertical" className="!h-8 mx-1" />
       <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
         editor.chain().focus().toggleOrderedList().run()
