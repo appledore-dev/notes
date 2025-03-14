@@ -8,6 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Typography from '@tiptap/extension-typography'
 import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { BoldIcon, ItalicIcon } from 'lucide-react'
 
 export default function TiptapEditor({ value, onChange }: {
   value?: string,
@@ -37,9 +38,21 @@ export default function TiptapEditor({ value, onChange }: {
     }
   })
 
-  return <div className="space-y-2 pt-2 flex flex-col w-full justify-start max-w-prose mx-auto">
+  return editor ? <div className="space-y-2 pt-2 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex gap-1 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5">
-      <Select defaultValue="p">
+      <Select
+        defaultValue="p"
+        value={editor.isActive('heading') ? editor.getAttributes('heading').level.toString() : 'p'}
+        onValueChange={(v) => {
+          if (v === 'p') {
+            editor.chain().focus().setParagraph().run()
+          } else {
+            editor.chain().focus().setHeading({
+              level: Number(v) as 1 | 2 | 3
+            }).run()
+          }
+        }}
+      >
         <SelectTrigger className="w-[120px] !h-8">
           <SelectValue placeholder="Theme" />
         </SelectTrigger>
@@ -47,16 +60,23 @@ export default function TiptapEditor({ value, onChange }: {
           <SelectItem value="1">Heading 1</SelectItem>
           <SelectItem value="2">Heading 2</SelectItem>
           <SelectItem value="3">Heading 3</SelectItem>
-          <SelectItem value="4">Heading 4</SelectItem>
           <SelectItem value="p">Paragraph</SelectItem>
         </SelectContent>
       </Select>
-      <Button size="sm" variant="outline" className="p-0 size-8">B</Button>
-      <Button size="sm" variant="outline" className="p-0 size-8">I</Button>
+      <Button size="sm" variant={editor.isActive('bold') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
+        editor.chain().focus().toggleBold().run()
+      }}>
+        <BoldIcon className="!size-3.5" />
+      </Button>
+      <Button size="sm" variant={editor.isActive('italic') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
+        editor.chain().focus().toggleItalic().run()
+      }}>
+        <ItalicIcon className="!size-3.5" />
+      </Button>
     </div>
     <EditorContent
       editor={editor}
       className="pb-4"
     />
-  </div>
+  </div> : <></>
 }
