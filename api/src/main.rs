@@ -1,7 +1,7 @@
 use axum::{
-  	routing::post,
-  	Json, Router,
-	http::StatusCode,
+    routing::post,
+    Json, Router,
+    http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
@@ -10,11 +10,11 @@ use dotenv::dotenv;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-  	let app = Router::new()
-		.route("/prompt", post(prompt));
+    let app = Router::new()
+        .route("/prompt", post(prompt));
 
-  	let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
-  	axum::serve(listener, app).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptResponse>) {
@@ -52,27 +52,27 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
     };
 
     let client = reqwest::Client::new();
-	let resp = client.post(format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={}", api_key))
+    let resp = client.post(format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={}", api_key))
         .body(to_string(&body).unwrap())
         .header("Content-Type", "application/json")
         .send()
         .await;
-	let data = resp.unwrap().json::<AIResponse>().await.unwrap();
+    let data = resp.unwrap().json::<AIResponse>().await.unwrap();
     let res = PromptResponse {
-		result: data.candidates[0].content.parts[0].text.to_string(),
-	};
-	(StatusCode::OK, Json(res))
+        result: data.candidates[0].content.parts[0].text.to_string(),
+    };
+    (StatusCode::OK, Json(res))
 }
 
 #[derive(Deserialize)]
 struct PromptRequest {
-	context: String,
-	prompt: String,
+    context: String,
+    prompt: String,
 }
 
 #[derive(Serialize)]
 struct PromptResponse {
-	result: String,
+    result: String,
 }
 
 #[derive(Serialize)]
