@@ -18,9 +18,9 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Strike from '@tiptap/extension-strike'
 import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
-import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
+import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { BoldIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, QuoteIcon, StrikethroughIcon, UnderlineIcon } from 'lucide-react'
+import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, QuoteIcon, StrikethroughIcon, UnderlineIcon } from 'lucide-react'
 
 export default function TiptapEditor({ value, onChange }: {
   value?: string,
@@ -113,7 +113,7 @@ export default function TiptapEditor({ value, onChange }: {
       }}>
         <UnderlineIcon className="!size-3.5" />
       </Button>
-      <Separator orientation="vertical" className="!h-8 mx-1" />
+      <Separator orientation="vertical" className="!h-8 mx-0" />
       <Button size="sm" variant={editor.isActive('strike') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
         editor.chain().focus().toggleStrike().run()
       }}>
@@ -185,7 +185,7 @@ export default function TiptapEditor({ value, onChange }: {
           </form>
         </PopoverContent>
       </Popover>}
-      <Separator orientation="vertical" className="!h-8 mx-1" />
+      <Separator orientation="vertical" className="!h-8 mx-0" />
       <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
         editor.chain().focus().toggleOrderedList().run()
       }}>
@@ -201,5 +201,22 @@ export default function TiptapEditor({ value, onChange }: {
       editor={editor}
       className="pb-4"
     />
+    <BubbleMenu
+      editor={editor}
+      tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
+      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}
+      shouldShow={() => {
+        return !!getSelectionText()
+      }}
+    >
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost">
+        <Edit3Icon className="!size-3.5" />
+        Simplify
+      </Button>
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost">
+        <EraserIcon className="!size-3.5" />
+        Fix spelling & grammar
+      </Button>
+    </BubbleMenu>
   </div> : <></>
 }
