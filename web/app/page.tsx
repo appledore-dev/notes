@@ -1,3 +1,5 @@
+'use client'
+
 import TiptapEditor from '@/components/editor-editor'
 
 export default function Home() {

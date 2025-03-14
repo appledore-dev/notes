@@ -1,6 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import Placeholder from '@tiptap/extension-placeholder'
+import Typography from '@tiptap/extension-typography'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
@@ -12,9 +14,14 @@ export default function TiptapEditor() {
       },
     },
     extensions: [
-      StarterKit
+      StarterKit,
+      Typography,
+      Placeholder.configure({
+        placeholder: 'Type something…',
+        showOnlyWhenEditable: true,
+      }),
     ],
-    content: '<p>Hello World! 🌎️</p>',
+    content: '',
   })
 
   return <EditorContent
