@@ -122,11 +122,10 @@
   }
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
+@utility no-scrollbar {
+  ::-webkit-scrollbar {
+    display: none;
+  }
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
@@ -177,7 +176,7 @@
   }
 
   pre {
-    @apply bg-muted rounded-[0.5rem] text-primary my-6 py-3 px-4 overflow-x-auto;
+    @apply bg-muted rounded-[0.5rem] text-primary my-6 py-3 px-4 overflow-x-auto no-scrollbar;
     font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
 
     code {
