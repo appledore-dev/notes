@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils'
 import CodeBlock from '@tiptap/extension-code-block'
 import Placeholder from '@tiptap/extension-placeholder'
 import Typography from '@tiptap/extension-typography'
+import Underline from '@tiptap/extension-underline'
 import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { BoldIcon, ItalicIcon } from 'lucide-react'
+import { BoldIcon, ItalicIcon, UnderlineIcon } from 'lucide-react'
 
 export default function TiptapEditor({ value, onChange }: {
   value?: string,
@@ -28,7 +29,8 @@ export default function TiptapEditor({ value, onChange }: {
         placeholder: 'Type something...',
         showOnlyWhenEditable: true,
       }),
-      CodeBlock
+      CodeBlock,
+      Underline
     ],
     content: value,
     onTransaction({ editor }) {
@@ -72,6 +74,11 @@ export default function TiptapEditor({ value, onChange }: {
         editor.chain().focus().toggleItalic().run()
       }}>
         <ItalicIcon className="!size-3.5" />
+      </Button>
+      <Button size="sm" variant={editor.isActive('underline') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
+        editor.chain().focus().toggleUnderline().run()
+      }}>
+        <UnderlineIcon className="!size-3.5" />
       </Button>
     </div>
     <EditorContent
