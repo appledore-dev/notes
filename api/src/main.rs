@@ -2,11 +2,10 @@ use axum::{
     routing::post,
     Json, Router,
     http::StatusCode,
-    error_handling::HandleError,
 };
 use tower_http::cors::{CorsLayer};
 use serde::{Deserialize, Serialize};
-use serde_json::{to_string, Value};
+use serde_json::{to_string};
 use dotenv::dotenv;
 
 #[tokio::main]

@@ -217,8 +217,8 @@ export default function TiptapEditor({ value, onChange }: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            prompt: getSelectionText(),
-            context: 'simplify',
+            prompt: 'simplify',
+            context: getSelectionText(),
           }),
         })
         if (!resp.ok) {
