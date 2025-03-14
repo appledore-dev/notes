@@ -228,7 +228,7 @@ export default function TiptapEditor({ value, onChange }: {
           return
         }
         const json = await resp.json()
-        console.log(json)
+        editor.commands.insertContent(json.result.trim())
       }}>
         <Edit3Icon className="!size-3.5" />
         Simplify
