@@ -59,7 +59,7 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
         .header("Content-Type", "application/json")
         .send()
         .await;
-    match resp {Ø
+    match resp {
         Ok(resp) => {
             if resp.status() != StatusCode::OK {
                 let err = resp.json::<AIResponseError>().await.unwrap();
