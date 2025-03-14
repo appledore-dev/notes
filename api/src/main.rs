@@ -2,16 +2,19 @@ use axum::{
     routing::post,
     Json, Router,
     http::StatusCode,
+    error_handling::HandleError,
 };
+use tower_http::cors::{CorsLayer};
 use serde::{Deserialize, Serialize};
-use serde_json::to_string;
+use serde_json::{to_string, Value};
 use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
     let app = Router::new()
-        .route("/prompt", post(prompt));
+        .route("/prompt", post(prompt))
+        .layer(CorsLayer::permissive());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -57,11 +60,20 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
         .header("Content-Type", "application/json")
         .send()
         .await;
-    let data = resp.unwrap().json::<AIResponse>().await.unwrap();
-    let res = PromptResponse {
-        result: data.candidates[0].content.parts[0].text.to_string(),
-    };
-    (StatusCode::OK, Json(res))
+    match resp {
+        Ok(resp) => {
+            if resp.status() != StatusCode::OK {
+                let err = resp.json::<AIResponseError>().await.unwrap();
+                return (StatusCode::BAD_REQUEST, Json(PromptResponse::Error { error: err.error.message }));
+            }
+            let json = resp.json::<AIResponse>().await.unwrap();
+            let result = &json.candidates[0].content.parts[0].text;
+            (StatusCode::OK, Json(PromptResponse::Result { result: result.to_string() }))
+        }
+        Err(err) => {
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(PromptResponse::Error { error: err.to_string() }));
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -71,8 +83,10 @@ struct PromptRequest {
 }
 
 #[derive(Serialize)]
-struct PromptResponse {
-    result: String,
+#[serde(untagged)]
+enum PromptResponse {
+    Result { result: String },
+    Error { error: String },
 }
 
 #[derive(Serialize)]
@@ -110,6 +124,18 @@ struct AIGenerationConfig {
 #[serde(rename_all = "camelCase")]
 struct AIResponse {
     candidates: Vec<AICandidate>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AIResponseError {
+    error: AIError,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AIError {
+    message: String,
 }
 
 #[derive(Deserialize)]

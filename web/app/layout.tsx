@@ -1,5 +1,6 @@
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata, Viewport } from 'next'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -25,7 +26,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={GeistSans.className}>
         {children}
+        <Toaster />
       </body>
     </html>
-  );
+  )
 }

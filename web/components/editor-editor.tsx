@@ -21,6 +21,7 @@ import Underline from '@tiptap/extension-underline'
 import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, QuoteIcon, StrikethroughIcon, UnderlineIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function TiptapEditor({ value, onChange }: {
   value?: string,
@@ -209,7 +210,26 @@ export default function TiptapEditor({ value, onChange }: {
         return !!getSelectionText()
       }}
     >
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost">
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={async () => {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: getSelectionText(),
+            context: 'simplify',
+          }),
+        })
+        if (!resp.ok) {
+          toast('Error', {
+            description: await resp.text(),
+          })
+          return
+        }
+        const json = await resp.json()
+        console.log(json)
+      }}>
         <Edit3Icon className="!size-3.5" />
         Simplify
       </Button>
