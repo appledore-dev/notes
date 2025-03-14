@@ -6,11 +6,11 @@ use axum::{
 use tower_http::cors::{CorsLayer};
 use serde::{Deserialize, Serialize};
 use serde_json::{to_string};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
+    dotenv().expect("Failed to load .env file");
     let app = Router::new()
         .route("/prompt", post(prompt))
         .layer(CorsLayer::permissive());
@@ -59,7 +59,7 @@ async fn prompt(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptR
         .header("Content-Type", "application/json")
         .send()
         .await;
-    match resp {
+    match resp {Ø
         Ok(resp) => {
             if resp.status() != StatusCode::OK {
                 let err = resp.json::<AIResponseError>().await.unwrap();
