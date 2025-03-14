@@ -123,6 +123,10 @@
 }
 
 .tiptap {
+  :first-child {
+    margin-top: 0;
+  }
+
   h1 {
     @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
   }
@@ -161,6 +165,16 @@
 
   code {
     @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+  }
+
+  pre {
+    @apply bg-muted rounded-[0.5rem] text-primary my-6 py-3 px-4;
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+
+    code {
+      @apply bg-none text-[0.8rem] text-foreground p-0 font-normal;
+      color: inherit;
+    }
   }
 
   p.is-editor-empty:first-child::before {

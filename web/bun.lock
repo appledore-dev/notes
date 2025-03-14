@@ -5,6 +5,7 @@
       "name": "web",
       "dependencies": {
         "@radix-ui/react-slot": "^1.1.2",
+        "@tiptap/extension-code-block": "^2.11.5",
         "@tiptap/extension-placeholder": "^2.11.5",
         "@tiptap/extension-typography": "^2.11.5",
         "@tiptap/pm": "^2.11.5",
