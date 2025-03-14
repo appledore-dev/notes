@@ -1,4 +1,9 @@
 .env
 .DS_Store
+.vscode
+.idea
+*.log
+*.local
+*.swp
 
 /target
