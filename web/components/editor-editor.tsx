@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import CodeBlock from '@tiptap/extension-code-block'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -12,7 +13,7 @@ export default function TiptapEditor() {
     autofocus: 'start',
     editorProps: {
       attributes: {
-        class: cn('max-w-prose mx-auto p-4 !h-[calc(100svh-2rem)] focus:outline-none border rounded-md border-dashed border-primary/60'),
+        class: cn('max-w-prose mx-auto p-4 !h-[calc(100svh-2rem-32px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed border-primary/60'),
       },
     },
     extensions: [
@@ -27,8 +28,13 @@ export default function TiptapEditor() {
     content: '',
   })
 
-  return <EditorContent
-    editor={editor}
-    className="py-4"
-  />
+  return <div className="space-y-2 pt-2">
+    <div className="max-w-prose mx-auto">
+      <Button size="sm" className="p-0 size-8">B</Button>
+    </div>
+    <EditorContent
+      editor={editor}
+      className="pb-4"
+    />
+  </div>
 }

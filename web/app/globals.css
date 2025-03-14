@@ -122,6 +122,15 @@
   }
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .tiptap {
   :first-child {
     margin-top: 0;
@@ -168,11 +177,11 @@
   }
 
   pre {
-    @apply bg-muted rounded-[0.5rem] text-primary my-6 py-3 px-4;
+    @apply bg-muted rounded-[0.5rem] text-primary my-6 py-3 px-4 overflow-x-auto;
     font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
 
     code {
-      @apply bg-none text-[0.8rem] text-foreground p-0 font-normal;
+      @apply bg-transparent text-[0.8rem] text-foreground p-0 font-normal whitespace-pre;
       color: inherit;
     }
   }
