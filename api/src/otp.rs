@@ -2,9 +2,11 @@ use argon2::{
     Argon2,
     PasswordHasher,
     PasswordVerifier,
-    password_hash::Salt,
-    password_hash::SaltString,
-    password_hash::rand_core::OsRng,
+    password_hash::{
+        Salt,
+        SaltString,
+        rand_core::OsRng,
+    },
 };
 use axum::{
     Json,
