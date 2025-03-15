@@ -1,26 +1,29 @@
+mod otp;
 mod prompt;
 
 use axum::{
     routing::post,
-    Router,
+    Extension, Router,
 };
 use dotenvy::dotenv;
-use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::{CorsLayer};
+use sqlx::postgres::PgPool;
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
     dotenv().expect("Failed to load .env file");
 
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(
+    let pool = PgPool::connect(
             std::env::var("DATABASE_URL").expect("DATABASE_URL must be set").as_str()
-        ).await;
+        )
+        .await
+        .expect("Failed to create pool");
 
     let app = Router::new()
+        .route("/otp", post(otp::handler))
         .route("/prompt", post(prompt::handler))
-        .layer(CorsLayer::permissive());
+        .layer(CorsLayer::permissive())
+        .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
     axum::serve(listener, app).await.unwrap();
