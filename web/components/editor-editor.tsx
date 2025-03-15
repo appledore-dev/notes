@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import Blockquote from '@tiptap/extension-blockquote'
@@ -21,7 +22,7 @@ import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
 import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
+import { BoldIcon, ChevronRightIcon, DramaIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -29,6 +30,7 @@ export default function TiptapEditor({ value, onChange }: {
   value?: string,
   onChange?: (value: JSONContent, editor: Editor) => void
 }) {
+  const isMobile = useIsMobile()
   const editor = useEditor({
     autofocus: 'start',
     editorProps: {
@@ -72,6 +74,7 @@ export default function TiptapEditor({ value, onChange }: {
   })
 
   const [loadingAi, setLoadingAi] = useState<string>()
+  const [openPopover, setOpenPopover] = useState<string>()
 
   const getSelectionText = () => {
     if (!editor) return null
@@ -103,6 +106,7 @@ export default function TiptapEditor({ value, onChange }: {
       }),
     })
     setLoadingAi(undefined)
+    setOpenPopover(undefined)
 
     if (!resp.ok) {
       toast('Error', {
@@ -260,6 +264,71 @@ export default function TiptapEditor({ value, onChange }: {
         {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
         Fix spelling & grammar
       </Button>
+      <Popover open={openPopover === 'tone'} onOpenChange={o => setOpenPopover(o ? 'tone' : undefined)}>
+        <PopoverTrigger asChild>
+          <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" disabled={!!loadingAi}>
+            {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+            <span>Rephrase with tone...</span>
+            <ChevronRightIcon className="!size-3.5 ml-3" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={12} alignOffset={isMobile ? -6 : 0}>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with authoritative tone')} disabled={!!loadingAi}>
+            Authoritative
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with conversational tone')} disabled={!!loadingAi}>
+            Conversational
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with cynical tone')} disabled={!!loadingAi}>
+            Cynical
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with emotional tone')} disabled={!!loadingAi}>
+            Emotional
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with encouraging tone')} disabled={!!loadingAi}>
+            Encouraging
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with formal tone')} disabled={!!loadingAi}>
+            Formal
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with friendly tone')} disabled={!!loadingAi}>
+            Friendly
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with humorous tone')} disabled={!!loadingAi}>
+            Humorous
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with informal tone')} disabled={!!loadingAi}>
+            Informal
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with inspiring tone')} disabled={!!loadingAi}>
+            Inspiring
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with neutral tone')} disabled={!!loadingAi}>
+            Neutral
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with nostalgic tone')} disabled={!!loadingAi}>
+            Nostalgic
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with optimistic tone')} disabled={!!loadingAi}>
+            Optimistic
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with persuasive tone')} disabled={!!loadingAi}>
+            Persuasive
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with pessimistic tone')} disabled={!!loadingAi}>
+            Pessimistic
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with reflective tone')} disabled={!!loadingAi}>
+            Reflective
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with sarcastic tone')} disabled={!!loadingAi}>
+            Sarcastic
+          </Button>
+          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with urgent tone')} disabled={!!loadingAi}>
+            Urgent
+          </Button>
+        </PopoverContent>
+      </Popover>
     </BubbleMenu>
   </div> : <></>
 }
