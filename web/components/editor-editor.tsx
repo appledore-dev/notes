@@ -20,7 +20,7 @@ import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
 import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, QuoteIcon, StrikethroughIcon, UnderlineIcon } from 'lucide-react'
+import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function TiptapEditor({ value, onChange }: {
@@ -128,7 +128,7 @@ export default function TiptapEditor({ value, onChange }: {
       <Button size="sm" variant={editor.isActive('blockquote') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
         editor.chain().focus().toggleBlockquote().run()
       }}>
-        <QuoteIcon className="!size-3.5" />
+        <TextQuoteIcon className="!size-3.5" />
       </Button>
       {editor.isActive('link') ? <Button size="sm" variant="default" className="p-0 size-8" onClick={() => {
         editor.chain().focus().unsetLink().run()
