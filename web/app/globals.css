@@ -130,6 +130,10 @@
   scrollbar-width: none;  /* Firefox */
 }
 
+::selection {
+  @apply bg-red-200;
+}
+
 .tiptap {
   :first-child {
     margin-top: 0;
