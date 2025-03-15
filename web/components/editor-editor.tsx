@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { LANGUAGES } from '@/lib/constant'
 import { cn } from '@/lib/utils'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import Blockquote from '@tiptap/extension-blockquote'
@@ -22,7 +23,7 @@ import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
 import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { BoldIcon, ChevronRightIcon, DramaIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
+import { BoldIcon, ChevronRightIcon, DramaIcon, Edit3Icon, EraserIcon, GlobeIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListMinusIcon, ListOrderedIcon, ListPlusIcon, SmilePlusIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -266,13 +267,15 @@ export default function TiptapEditor({ value, onChange }: {
       </Button>
       <Popover open={openPopover === 'tone'} onOpenChange={o => setOpenPopover(o ? 'tone' : undefined)}>
         <PopoverTrigger asChild>
-          <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" disabled={!!loadingAi}>
-            {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
-            <span>Rephrase with tone...</span>
-            <ChevronRightIcon className="!size-3.5 ml-3" />
+          <Button size="sm" className="gap-6 font-normal w-full justify-between" variant="ghost" disabled={!!loadingAi}>
+            <div className="flex items-center gap-2">
+              {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+              <span>Rephrase with tone...</span>
+            </div>
+            <ChevronRightIcon className="!size-3.5" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={12} alignOffset={isMobile ? -6 : 0}>
+        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={isMobile ? 8 : 12} alignOffset={isMobile ? -6 : 0}>
           <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with authoritative tone')} disabled={!!loadingAi}>
             Authoritative
           </Button>
@@ -329,6 +332,36 @@ export default function TiptapEditor({ value, onChange }: {
           </Button>
         </PopoverContent>
       </Popover>
+      <Popover open={openPopover === 'translate'} onOpenChange={o => setOpenPopover(o ? 'translate' : undefined)}>
+        <PopoverTrigger asChild>
+          <Button size="sm" className="gap-6 font-normal w-full justify-between" variant="ghost" disabled={!!loadingAi}>
+            <div className="flex gap-2 items-center">
+              {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
+              <span>Translate to...</span>
+            </div>
+            <ChevronRightIcon className="!size-3.5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={isMobile ? 8 : 12} alignOffset={isMobile ? -6 : 0}>
+          {LANGUAGES.map((lang) => (
+            <Button key={lang.code} size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi(`translate to ${lang.name}`)} disabled={!!loadingAi}>
+              {lang.name}
+            </Button>
+          ))}
+        </PopoverContent>
+      </Popover>
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('make it shorter')} disabled={!!loadingAi}>
+        {loadingAi === 'make it shorter' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListMinusIcon className="!size-3.5" />}
+        Make it shorter
+      </Button>
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('make it longer')} disabled={!!loadingAi}>
+        {loadingAi === 'make it longer' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListPlusIcon className="!size-3.5" />}
+        Make it longer
+      </Button>
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('emojify')} disabled={!!loadingAi}>
+        {loadingAi === 'emojify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SmilePlusIcon className="!size-3.5" />}
+        Emojify
+      </Button>
     </BubbleMenu>
   </div> : <></>
 }
