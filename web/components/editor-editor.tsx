@@ -21,14 +21,14 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Strike from '@tiptap/extension-strike'
 import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
-import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
+import { BubbleMenu, Content, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { BoldIcon, ChevronRightIcon, DramaIcon, Edit3Icon, EraserIcon, GlobeIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListMinusIcon, ListOrderedIcon, ListPlusIcon, SmilePlusIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export default function TiptapEditor({ value, onChange }: {
-  value?: string,
+export default function TiptapEditor({ defaultValue, onChange }: {
+  defaultValue?: Content,
   onChange?: (value: JSONContent, editor: Editor) => void
 }) {
   const isMobile = useIsMobile()
@@ -68,11 +68,17 @@ export default function TiptapEditor({ value, onChange }: {
         }
       })
     ],
-    content: value,
     onUpdate({ editor }) {
-      onChange?.(editor.getJSON(), editor)
+      const json = editor.getJSON()
+      onChange?.(json, editor)
     }
   })
+
+  useEffect(() => {
+    if (editor && defaultValue) {
+      editor.commands.setContent(defaultValue)
+    }
+  }, [defaultValue, editor])
 
   const [loadingAi, setLoadingAi] = useState<string>()
   const [openPopover, setOpenPopover] = useState<string>()
