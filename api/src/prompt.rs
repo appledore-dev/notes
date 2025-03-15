@@ -113,18 +113,6 @@ struct AIResponse {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct AIResponseError {
-    error: AIError,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AIError {
-    message: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct AICandidate {
     content: AIContentCandidate,
 }
@@ -139,4 +127,16 @@ struct AIContentCandidate {
 #[serde(rename_all = "camelCase")]
 struct AIPartCandidate {
     text: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AIResponseError {
+    error: AIError,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AIError {
+    message: String,
 }
