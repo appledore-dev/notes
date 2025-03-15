@@ -35,14 +35,14 @@ export default function TiptapEditor({ value, onChange }: {
     autofocus: 'start',
     editorProps: {
       attributes: {
-        class: cn('p-4 !h-[calc(100svh-2rem-36px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed border-primary/60'),
+        class: cn('p-4 !h-[calc(100svh-2rem-36px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed'),
       },
     },
     extensions: [
       StarterKit,
       Typography,
       Placeholder.configure({
-        placeholder: 'Type something...',
+        placeholder: 'Type something and select the text to use AI...',
         showOnlyWhenEditable: true,
       }),
       CodeBlock,
