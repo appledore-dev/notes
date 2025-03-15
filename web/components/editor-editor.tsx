@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { ReloadIcon } from '@radix-ui/react-icons'
 import Blockquote from '@tiptap/extension-blockquote'
 import BulletList from '@tiptap/extension-bullet-list'
 import CodeBlock from '@tiptap/extension-code-block'
@@ -21,6 +22,7 @@ import Underline from '@tiptap/extension-underline'
 import { BubbleMenu, Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { BoldIcon, Edit3Icon, EraserIcon, HighlighterIcon, ItalicIcon, Link2Icon, Link2OffIcon, ListIcon, ListOrderedIcon, StrikethroughIcon, TextQuoteIcon, UnderlineIcon } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 export default function TiptapEditor({ value, onChange }: {
@@ -48,7 +50,9 @@ export default function TiptapEditor({ value, onChange }: {
       OrderedList,
       ListItem,
       Blockquote,
-      Highlight,
+      Highlight.configure({
+        multicolor: true,
+      }),
       Link.configure({
         openOnClick: true,
         autolink: true,
@@ -67,11 +71,49 @@ export default function TiptapEditor({ value, onChange }: {
     }
   })
 
+  const [loadingAi, setLoadingAi] = useState<string>()
+
   const getSelectionText = () => {
-    if (!editor) return ''
+    if (!editor) return null
     const { view, state } = editor
     const { from, to } = view.state.selection
-    return state.doc.textBetween(from, to, '')
+    return {
+      from,
+      to,
+      text: state.doc.textBetween(from, to, '')
+    }
+  }
+
+  const runAi = async (prompt: string) => {
+    if (!editor) return
+
+    setLoadingAi(prompt)
+    editor.chain().focus().setHighlight({ color: 'black' }).run()
+
+    const selection = getSelectionText() as { from: number, to: number, text: string }
+
+    const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        context: selection.text,
+      }),
+    })
+    setLoadingAi(undefined)
+
+    if (!resp.ok) {
+      toast('Error', {
+        description: await resp.text(),
+      })
+      return
+    }
+
+    const json = await resp.json()
+    editor.chain().focus().unsetHighlight().run()
+    editor.commands.insertContent(json.result.trim())
   }
 
   return editor ? <div className="relative space-y-2 pt-2 flex flex-col w-full justify-start max-w-prose mx-auto">
@@ -120,7 +162,7 @@ export default function TiptapEditor({ value, onChange }: {
       }}>
         <StrikethroughIcon className="!size-3.5" />
       </Button>
-      <Button size="sm" variant={editor.isActive('highlight') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
+      <Button size="sm" variant={editor.isActive('highlight') && editor.getAttributes('highlight').color !== 'black' ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
         editor.chain().focus().toggleHighlight().run()
       }}>
         <HighlighterIcon className="!size-3.5" />
@@ -180,7 +222,7 @@ export default function TiptapEditor({ value, onChange }: {
             </div>
             <div className="flex justify-end gap-1">
               <Button size="sm" variant="outline" type="submit">
-                {getSelectionText() ? 'Set' : 'Insert'} Link
+                {getSelectionText()?.text ? 'Set' : 'Insert'} Link
               </Button>
             </div>
           </form>
@@ -207,34 +249,15 @@ export default function TiptapEditor({ value, onChange }: {
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
       className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}
       shouldShow={() => {
-        return !!getSelectionText()
+        return !!getSelectionText()?.text
       }}
     >
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={async () => {
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: 'simplify',
-            context: getSelectionText(),
-          }),
-        })
-        if (!resp.ok) {
-          toast('Error', {
-            description: await resp.text(),
-          })
-          return
-        }
-        const json = await resp.json()
-        editor.commands.insertContent(json.result.trim())
-      }}>
-        <Edit3Icon className="!size-3.5" />
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
+        {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
         Simplify
       </Button>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost">
-        <EraserIcon className="!size-3.5" />
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('fix spelling and grammar')} disabled={!!loadingAi}>
+        {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
         Fix spelling & grammar
       </Button>
     </BubbleMenu>

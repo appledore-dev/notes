@@ -190,7 +190,12 @@
   }
 
   mark {
-    @apply relative rounded bg-yellow-200 px-[0.3rem] py-[0.2rem];
+    @apply relative rounded px-[0.3rem] py-[0.2rem] data-[color=black]:!text-muted-foreground data-[color=black]:!bg-muted data-[color=black]:!px-0;
+  }
+
+  .has-focus {
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px var(--color-ring);
   }
 
   p.is-editor-empty:first-child::before {
