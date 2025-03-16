@@ -13,27 +13,20 @@ import { useUser } from '@/hooks/use-user'
 import { Content } from '@tiptap/react'
 import { Edit3Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function Page() {
   const r = useRouter()
   const { user } = useUser()
-  const [value, setValue] = useState<Content>(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (value) {
-      localStorage.setItem('tiptap-content', JSON.stringify(value))
-    }
-  }, [value])
-
-  useEffect(() => {
+  const defaultValue = useMemo<Content>(() => {
     const content = localStorage.getItem('tiptap-content')
     if (content) {
-      setValue(JSON.parse(content))
+      return JSON.parse(content)
     }
+    return null
   }, [])
+  const [loading, setLoading] = useState(false)
 
   return <>
     <header className="flex h-16 shrink-0 items-center gap-6 justify-between px-4">
@@ -52,8 +45,8 @@ export default function Page() {
     </header>
     <div className="flex flex-1 flex-col gap-4 p-4 py-0">
       <TiptapEditor
-        defaultValue={value}
-        onChange={content => setValue(content)}
+        defaultValue={defaultValue}
+        onChange={content => localStorage.setItem('tiptap-content', JSON.stringify(content))}
         action={(editor) => user ? <Dialog>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
@@ -74,12 +67,11 @@ export default function Page() {
               e.preventDefault()
               setLoading(true)
               const formData = new FormData(e.currentTarget)
-
               const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs`, {
                 method: 'POST',
                 body: JSON.stringify({
                   title: formData.get('title'),
-                  content_json: value,
+                  content_json: editor.getJSON(),
                   content_text: editor.getHTML(),
                 }),
                 headers: {
@@ -99,7 +91,6 @@ export default function Page() {
               if (res.ok) {
                 localStorage.removeItem('tiptap-content')
                 editor.commands.clearContent()
-                setValue(null)
 
                 const json = await res.json()
                 r.push(`/${json?.doc?.id}`)

@@ -17,7 +17,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUser } from '@/hooks/use-user'
 import { cn } from '@/lib/utils'
-import { ChevronDownIcon, CommandIcon, ComputerIcon, LogOutIcon, MoonStarIcon, SunIcon } from 'lucide-react'
+import { GitHubLogoIcon } from '@radix-ui/react-icons'
+import { ChevronDownIcon, CommandIcon, ComputerIcon, LogOutIcon, MoonStarIcon, PlusIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -41,7 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }>({
     navMain: [
       {
-        title: '+ New Document',
+        title: 'New Document',
         url: '/',
       },
     ],
@@ -51,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setData({
       navMain: [
         {
-          title: "+ New Document",
+          title: "New Document",
           url: "/",
         },
         ...docs.map((item) => ({
@@ -112,9 +113,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarMenu className="gap-1">
             {data.navMain.map((item, i) => (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.url}>
                 <SidebarMenuButton asChild isActive={item.isActive}>
-                  <Link href={item.url} className={cn('grid grid-cols-1', i === 0 ? 'font-medium' : '')}>
+                  <Link href={item.url} className={cn('flex items-center gap-2 truncate', i === 0 ? 'font-medium' : '')}>
+                    {i === 0 ? <PlusIcon className="!size-3.5" /> : <></>}
                     <span className="truncate">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -168,44 +170,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <span className="text-xs text-muted-foreground">
-              v0.1
-            </span>
+            <Link href="https://github.com/hatchways-community/senior-full-stack-engineer-ai-work-sample-a8f597bb35ef46998c617b1f2bfc4981" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary">
+              <GitHubLogoIcon className="!size-3.5" />
+            </Link>
           </div>
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Card className="shadow-none py-0 hover:cursor-pointer">
-                <CardHeader className="p-4 gap-0">
-                  <CardTitle className="flex items-center gap-4 justify-between font-medium text-sm">
-                    <div className="grid grid-cols-1 flex-1">
-                      <span className="truncate">{user?.user.email}</span>
-                    </div>
-                    <ChevronUpIcon className="!size-3.5 opacity-50" />
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64">
-              <Tabs defaultValue={theme} onValueChange={setTheme}>
-                <TabsList>
-                  <TabsTrigger value="light">
-                    <SunIcon className="!size-3" />
-                  </TabsTrigger>
-                  <TabsTrigger value="dark">
-                    <MoonStarIcon className="!size-3" />
-                  </TabsTrigger>
-                  <TabsTrigger value="system">
-                    <ComputerIcon className="!size-3" />
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 !text-red-400">
-                <LogOutIcon className="!size-4 !text-red-400" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu> */}
         </div>
       </SidebarFooter>}
     </Sidebar>

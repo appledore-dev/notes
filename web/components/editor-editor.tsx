@@ -49,6 +49,7 @@ import {
   SmilePlusIcon,
   SparklesIcon,
   StrikethroughIcon,
+  TerminalIcon,
   TextQuoteIcon,
   UnderlineIcon
 } from 'lucide-react'
@@ -157,7 +158,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
 
   return editor ? <div className="relative space-y-2.5 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex items-center gap-4 justify-between w-full">
-      <div className="flex gap-2 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5 flex-1">
+      <div className="flex gap-1.5 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5 flex-1">
         <Select
           defaultValue="p"
           value={editor.isActive('heading') ? editor.getAttributes('heading').level.toString() : 'p'}
@@ -268,6 +269,11 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
             </form>
           </PopoverContent>
         </Popover>}
+        <Button size="sm" variant={editor.isActive('codeBlock') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
+          editor.chain().focus().toggleCodeBlock().run()
+        }}>
+          <TerminalIcon className="!size-3.5" />
+        </Button>
         <Separator orientation="vertical" className="!h-8 mx-0" />
         <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
           editor.chain().focus().toggleOrderedList().run()

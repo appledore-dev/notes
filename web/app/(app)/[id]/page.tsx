@@ -12,24 +12,25 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useUser } from '@/hooks/use-user'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { Content } from '@tiptap/react'
-import isEqual from 'lodash.isequal'
-import { CheckIcon, Edit3Icon, Trash2Icon, TriangleAlertIcon } from 'lucide-react'
+import { JSONContent } from '@tiptap/react'
+import { CheckIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function Page() {
   const r = useRouter()
   const { user } = useUser()
   const params = useParams()
-  const [value, setValue] = useState<Content>(null)
   const [doc, setDoc] = useState<{
     id: string
     title: string
-    content_json: any
+    content_json: JSONContent
     content_text: string
   } | null>(null)
+  const defaultValue = useMemo<JSONContent | undefined>(() => {
+    return doc?.content_json
+  }, [doc])
   const [loading, setLoading] = useState(false)
 
     const fetchDoc = useCallback(async () => {
@@ -45,7 +46,6 @@ export default function Page() {
       if (res.ok) {
         const data = await res.json()
         setDoc(data?.doc || null)
-        setValue(data?.doc?.content_json || null)
       } else {
         r.replace('/')
       }
@@ -86,7 +86,7 @@ export default function Page() {
                   method: 'PUT',
                   body: JSON.stringify({
                     title: formData.get('title'),
-                    content_json: value,
+                    content_json: doc?.content_json,
                     content_text: doc?.content_text,
                   }),
                   headers: {
@@ -138,8 +138,8 @@ export default function Page() {
     </header>
     <div className="flex flex-1 flex-col gap-4 p-4 py-0">
       <TiptapEditor
-        defaultValue={value}
-        onChange={content => setValue(content)}
+        defaultValue={defaultValue}
+        onChange={content => setDoc(prev => ({ ...prev, content_json: content } as any))}
         action={(editor) => <div className="flex gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -164,13 +164,12 @@ export default function Page() {
                   if (res.ok) {
                     const data = await res.json()
                     setDoc(data?.doc || null)
-                    setValue(data?.doc?.content_json || null)
                   }
-                }} disabled={loading || isEqual(doc?.content_json, editor.getJSON())} className="gap-2">
+                }} disabled={loading || doc?.content_text === editor.getHTML()} className="gap-2">
                   <span className="hidden md:inline">
-                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
+                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : doc?.content_text === editor.getHTML() ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
                   </span>
-                  {loading ? 'Updating' : isEqual(doc?.content_json, editor.getJSON()) ? 'Updated' : 'Update'}
+                  {doc?.content_text === editor.getHTML() ? 'Updated' : 'Update'}
                 </Button>
               </span>
             </TooltipTrigger>
