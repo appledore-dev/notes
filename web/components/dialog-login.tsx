@@ -9,7 +9,11 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-export function DialogLogin({ children }: { children: React.ReactNode }) {
+export function DialogLogin({ title, description, children }: {
+  title?: string
+  description?: string
+  children: React.ReactNode
+}) {
   const { fetchUser } = useUser()
   const [openLogin, setOpenLogin] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,10 +28,10 @@ export function DialogLogin({ children }: { children: React.ReactNode }) {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>
-          Sign in with Email
+          {title || 'Sign in with Email'}
         </DialogTitle>
         <DialogDescription>
-          Enter your email address to receive a one-time password (OTP) for signing in.
+          {description || 'Enter your email address to receive a one-time password (OTP) for signing in.'}
         </DialogDescription>
       </DialogHeader>
       {step === 'ask-email' ? <form onSubmit={async e => {
