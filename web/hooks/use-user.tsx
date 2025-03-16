@@ -42,7 +42,11 @@ export function UserProvider({
   const [user, setUser] = useState<AuthUser | null | undefined>(undefined)
 
   const fetchUser = useCallback(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`).then(res => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+      },
+    }).then(res => {
       if (res.ok) {
         res.json().then(setUser)
       } else {

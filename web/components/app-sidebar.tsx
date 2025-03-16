@@ -1,8 +1,10 @@
 'use client'
 
+import { SidebarBanner } from '@/components/sidebar-banner'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -46,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ...prev.navMain,
         ...docs.map((item) => ({
           title: item.title,
-          url: `/docs/${item.id}`,
+          url: `/${item.id}`,
         })),
       ].map((item) => ({
         ...item,
@@ -113,6 +115,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      {user === null ? <SidebarFooter>
+        <div className="p-1">
+          <SidebarBanner />
+        </div>
+      </SidebarFooter> : <></>}
     </Sidebar>
   )
 }

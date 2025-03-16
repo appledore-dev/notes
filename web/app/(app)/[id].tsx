@@ -6,9 +6,11 @@ import {
   SidebarTrigger
 } from '@/components/ui/sidebar'
 import { Content } from '@tiptap/react'
+import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function Page() {
+  const params = useParams()
   const [value, setValue] = useState<Content>(null)
 
     useEffect(() => {
