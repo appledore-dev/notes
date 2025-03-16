@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   useEffect(() => {
     fetchDocs()
-  }, [fetchDocs])
+  }, [fetchDocs, p])
 
   return (
     <Sidebar variant="floating" {...props}>
