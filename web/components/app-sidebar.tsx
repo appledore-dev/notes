@@ -34,18 +34,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }>({
     navMain: [
       {
-        title: "+ New Document",
-        url: "/",
-        isActive: true,
+        title: '+ New Document',
+        url: '/',
       },
     ],
   })
 
   useEffect(() => {
-    setData((prev) => ({
-      ...prev,
+    setData({
       navMain: [
-        ...prev.navMain,
+        {
+          title: "+ New Document",
+          url: "/",
+        },
         ...docs.map((item) => ({
           title: item.title,
           url: `/${item.id}`,
@@ -54,7 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ...item,
         isActive: item.url === p,
       })),
-    }))
+    })
   }, [p, docs])
 
   const fetchDocs = useCallback(async () => {
@@ -102,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu className="gap-2">
+          <SidebarMenu className="gap-1">
             {data.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={item.isActive}>

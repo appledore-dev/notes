@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
 import { useUser } from '@/hooks/use-user'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { useState } from 'react'
@@ -44,6 +44,7 @@ export function DialogLogin({ children }: { children: React.ReactNode }) {
             'Content-Type': 'application/json',
           },
         })
+        await new Promise(resolve => setTimeout(resolve, 2500))
         setLoading(false)
         if (!resp.ok) {
           toast('Error', {
@@ -51,7 +52,6 @@ export function DialogLogin({ children }: { children: React.ReactNode }) {
           })
           return
         }
-        await new Promise(resolve => setTimeout(resolve, 2500))
         toast('Success', {
           description: 'Check your email for the OTP.',
         })
@@ -118,10 +118,13 @@ export function DialogLogin({ children }: { children: React.ReactNode }) {
       }}>
         <div className="space-y-2 pb-6">
           <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
-            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-2xl [&>div]:text-xl w-full">
+            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-4xl [&>div]:text-2xl w-full">
               <InputOTPSlot index={0} autoFocus tabIndex={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />
+            </InputOTPGroup>
+            <InputOTPSeparator />
+            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-4xl [&>div]:text-2xl w-full">
               <InputOTPSlot index={3} />
               <InputOTPSlot index={4} />
               <InputOTPSlot index={5} />
