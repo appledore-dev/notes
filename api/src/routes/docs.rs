@@ -9,8 +9,7 @@ use uuid::Uuid;
 
 use crate::auth::CurrentUser;
 
-pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
-    println!("Auth user: {:?}", auth_user.email);
+pub async fn get_handler(Extension(pool): Extension<PgPool>) -> (StatusCode, Json<DocsResponse>) {
     let docs = query!(
         r#"
         SELECT * FROM docs
@@ -33,12 +32,12 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user
     (StatusCode::OK, Json(DocsResponse { docs, error: None }))
 }
 
-pub async fn post_handler(Extension(pool): Extension<PgPool>, Json(payload): Json<DocsRequest>) -> (StatusCode, Json<DocsResponse>) {
+pub async fn post_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>, Json(payload): Json<DocsRequest>) -> (StatusCode, Json<DocsResponse>) {
     let data = CreateDoc {
         title: payload.title,
         content_text: payload.content_text,
         content_json: payload.content_json,
-        user_id: "user_id".to_string(), // Placeholder, replace with actual user ID
+        user_id: auth_user.id.to_string()
     };
 
     let doc = query!(
