@@ -1,7 +1,6 @@
 use argon2::{
     Argon2,
     password_hash::{
-        PasswordVerifier,
         PasswordHash,
     },
 };
@@ -35,6 +34,7 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
                     query!(
                         r#"
                         UPDATE users SET verification_code = $1 WHERE email = $2
+                        RETURNING id, email, verification_code, created_at
                         "#,
                         None::<String>,
                         payload.email

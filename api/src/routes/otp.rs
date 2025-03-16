@@ -11,8 +11,11 @@ use axum::{
     Json,
     Extension, http::StatusCode,
 };
+use lettre::{Message, SmtpTransport, Transport};
+use lettre::transport::smtp::{authentication::{Credentials}};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::env::var;
 use sqlx::{PgPool, query};
 
 pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<OtpRequest>) -> (StatusCode, Json<OtpResponse>) {
@@ -45,7 +48,7 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
             .fetch_one(&pool)
             .await
             .expect("Failed to update user");
-
+            send_otp_email(&payload.email, &password).await;
             return (StatusCode::OK, Json(OtpResponse {}));
         }
         Err(_) => {
@@ -66,7 +69,32 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
     }
 }
 
-async fn send_otp_email(email: &str, otp: &str) {
+async fn send_otp_email(to: &str, otp: &str) {
+    let email = Message::builder()
+        .from(
+            var("EMAIL_FROM").expect("EMAIL_FROM must be set").as_str()
+            .parse().unwrap()
+        )
+        .to(to.parse().unwrap())
+        .subject(format!("Your OTP Code: {}", otp))
+        .body(format!("Hello!\n\nYour OTP code is: {}", otp))
+        .unwrap();
+
+    let creds = Credentials::new(
+        var("EMAIL_USER").expect("EMAIL_USER must be set").as_str().to_string(),
+        var("EMAIL_PASS").expect("EMAIL_PASS must be set").as_str().to_string()
+    );
+
+    let mailer = SmtpTransport::starttls_relay(
+        &var("EMAIL_HOST").expect("EMAIL_HOST must be set").as_str().to_string())
+        .unwrap()
+        .credentials(creds)
+        .build();
+
+    match mailer.send(&email) {
+        Ok(_) => println!("Email sent successfully!"),
+        Err(e) => eprintln!("Could not send email: {:?}", e),
+    }
 }
 
 #[derive(Deserialize)]
