@@ -29,21 +29,25 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
 
             let code = user.verification_code.clone().unwrap_or_default();
             let password_hash = PasswordHash::new(&code).expect("invalid password hash");
-            let algs: &[&dyn PasswordVerifier] = &[&Argon2::default()];
-            if password_hash.verify_password(algs, payload.verification_code.as_str()).is_err() {
-                return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
+            let res = password_hash.verify_password(&[&Argon2::default()], payload.verification_code.as_str());
+            match res {
+                Ok(_) => {
+                    query!(
+                        r#"
+                        UPDATE users SET verification_code = $1 WHERE email = $2
+                        "#,
+                        None::<String>,
+                        payload.email
+                    )
+                    .fetch_one(&pool)
+                    .await
+                    .expect("Failed to update user");
+                    return (StatusCode::OK, Json(OtpVerifyResponse {}));
+                }
+                Err(_) => {
+                    return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
+                }
             }
-            query!(
-                r#"
-                UPDATE users SET verification_code = $1 WHERE email = $2
-                "#,
-                None::<String>,
-                payload.email
-            )
-            .fetch_one(&pool)
-            .await
-            .expect("Failed to update user");
-            return (StatusCode::OK, Json(OtpVerifyResponse {}));
         }
         Err(_) => {
             return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
