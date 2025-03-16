@@ -28,10 +28,10 @@ export function DialogLogin({ title, description, children }: {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>
-          {title || 'Sign in with Email'}
+          {step === 'ask-otp' ? 'Input One-time Password' : title || 'Sign in with Email'}
         </DialogTitle>
         <DialogDescription>
-          {description || 'Enter your email address to receive a one-time password for signing in.'}
+          {step === 'ask-otp' ? 'Check your email to get the one-time password.' : description || 'Enter your email address to receive a one-time password for signing in.'}
         </DialogDescription>
       </DialogHeader>
       {step === 'ask-email' ? <form onSubmit={async e => {
@@ -143,7 +143,7 @@ export function DialogLogin({ title, description, children }: {
           </DialogClose>
           <Button type="submit" disabled={loading}>
             {loading ? <ReloadIcon className="animate-spin !size-4" /> : <></>}
-            Verify OTP
+            Verify
           </Button>
         </DialogFooter>
       </form> : <></>}
