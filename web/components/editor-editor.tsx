@@ -26,6 +26,7 @@ import {
   Content,
   Editor,
   EditorContent,
+  FloatingMenu,
   JSONContent,
   useEditor
 } from '@tiptap/react'
@@ -46,6 +47,7 @@ import {
   ListOrderedIcon,
   ListPlusIcon,
   SmilePlusIcon,
+  SparklesIcon,
   StrikethroughIcon,
   TextQuoteIcon,
   UnderlineIcon
@@ -120,7 +122,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     }
   }
 
-  const runAi = async (prompt: string) => {
+  const runAi = async (prompt: string, context?: string) => {
     if (!editor) return
 
     setLoadingAi(prompt)
@@ -133,7 +135,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       },
       body: JSON.stringify({
         prompt: prompt,
-        context: selection.text,
+        context: context || selection.text,
       }),
     })
     setLoadingAi(undefined)
@@ -147,6 +149,9 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     }
 
     const json = await resp.json()
+    if (context) {
+      editor.commands.deleteRange({ from: selection.from - 1, to: selection.to })
+    }
     editor.commands.insertContent(json.result.trim())
   }
 
@@ -284,7 +289,8 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     <BubbleMenu
       editor={editor}
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
-      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}>
+      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}
+    >
       <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
         {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
         Simplify
@@ -391,5 +397,18 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         Emojify
       </Button>
     </BubbleMenu>
+    <FloatingMenu editor={editor} tippyOptions={{ placement: 'bottom-start', zIndex: 50 }} shouldShow={({ state }) => {
+      const { from, to } = state.selection
+      const text = state.doc.textBetween(from - 1, to)
+      return text.endsWith('/')
+    }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-30', editor?.isEditable ? '' : 'hidden')}>
+      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
+        const selection = getSelectionText()
+        runAi('continue', editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim())
+      }} disabled={!!loadingAi}>
+        {loadingAi === 'continue' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
+        Continue
+      </Button>
+    </FloatingMenu>
   </div> : <></>
 }
