@@ -1,5 +1,4 @@
-import * as React from "react"
-import { GalleryVerticalEnd } from "lucide-react"
+'use client'
 
 import {
   Sidebar,
@@ -8,169 +7,93 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
-
-// This is sample data.
-const data = {
-  navMain: [
-    {
-      title: "Getting Started",
-      url: "#",
-      items: [
-        {
-          title: "Installation",
-          url: "#",
-        },
-        {
-          title: "Project Structure",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Building Your Application",
-      url: "#",
-      items: [
-        {
-          title: "Routing",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "API Reference",
-      url: "#",
-      items: [
-        {
-          title: "Components",
-          url: "#",
-        },
-        {
-          title: "File Conventions",
-          url: "#",
-        },
-        {
-          title: "Functions",
-          url: "#",
-        },
-        {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Architecture",
-      url: "#",
-      items: [
-        {
-          title: "Accessibility",
-          url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Community",
-      url: "#",
-      items: [
-        {
-          title: "Contribution Guide",
-          url: "#",
-        },
-      ],
-    },
-  ],
-}
+  SidebarMenuItem
+} from '@/components/ui/sidebar'
+import { useUser } from '@/hooks/use-user'
+import { CommandIcon } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const p = usePathname()
+  const { user } = useUser()
+  const [docs, setDocs] = useState<{
+    id: string
+    title: string
+  }[]>([])
+
+  const [data, setData] = useState<{
+    navMain: {
+      title: string
+      url: string
+      isActive?: boolean
+    }[]
+  }>({
+    navMain: [
+      {
+        title: "+ New Document",
+        url: "/",
+        isActive: true,
+      },
+    ],
+  })
+
+  useEffect(() => {
+    setData((prev) => ({
+      ...prev,
+      navMain: [
+        ...prev.navMain,
+        ...docs.map((item) => ({
+          title: item.title,
+          url: `/docs/${item.id}`,
+        })),
+      ].map((item) => ({
+        ...item,
+        isActive: item.url === p,
+      })),
+    }))
+  }, [p, docs])
+
+  const fetchDocs = useCallback(async () => {
+    if (user) {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setDocs(data?.docs || [])
+      }
+    }
+  }, [user])
+
+  useEffect(() => {
+    fetchDocs()
+  }, [fetchDocs])
+
   return (
     <Sidebar variant="floating" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="/">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <GalleryVerticalEnd className="size-4" />
+                  <CommandIcon className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">Documentation</span>
-                  <span className="">v1.0.0</span>
+                  <span className="font-medium">
+                    AI Text Editor
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    by @mgilangjanuar
+                  </span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -180,22 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {data.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url} className="font-medium">
+                <SidebarMenuButton asChild isActive={item.isActive}>
+                  <Link href={item.url}>
                     {item.title}
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
-                {item.items?.length ? (
-                  <SidebarMenuSub className="ml-0 border-l-0 px-1.5">
-                    {item.items.map((item) => (
-                      <SidebarMenuSubItem key={item.title}>
-                        <SidebarMenuSubButton asChild isActive={item.isActive}>
-                          <a href={item.url}>{item.title}</a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                ) : null}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
