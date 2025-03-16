@@ -7,7 +7,10 @@ use serde_json::Value;
 use sqlx::{PgPool, query};
 use uuid::Uuid;
 
-pub async fn get_handler(Extension(pool): Extension<PgPool>) -> (StatusCode, Json<DocsResponse>) {
+use crate::auth::CurrentUser;
+
+pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
+    println!("Auth user: {:?}", auth_user.email);
     let docs = query!(
         r#"
         SELECT * FROM docs

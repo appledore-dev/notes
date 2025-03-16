@@ -1,6 +1,8 @@
+mod auth;
 mod routes;
 
 use axum::{
+    middleware,
     routing::{post, get},
     Extension, Router,
 };
@@ -22,7 +24,10 @@ async fn main() {
         .route("/otp", post(routes::otp::handler))
         .route("/otp-verify", post(routes::otpverify::handler))
         .route("/prompt", post(routes::prompt::handler))
-        .route("/docs", get(routes::docs::get_handler).post(routes::docs::post_handler))
+        .route("/docs",
+            get(routes::docs::get_handler).post(routes::docs::post_handler)
+            .layer(middleware::from_fn(auth::authorize))
+        )
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
 
