@@ -1,6 +1,7 @@
 'use client'
 
 import TiptapEditor from '@/components/editor-editor'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
   SidebarTrigger
@@ -40,7 +41,13 @@ export default function Page() {
       </div>
     </header>
     <div className="flex flex-1 flex-col gap-4 p-4 py-0">
-      <TiptapEditor defaultValue={value} onChange={content => setValue(content)} />
+      <TiptapEditor
+        defaultValue={value}
+        onChange={content => setValue(content)}
+        action={(editor) => <Button size="sm" className="gap-2">
+          Save
+        </Button>}
+      />
     </div>
   </>
 }

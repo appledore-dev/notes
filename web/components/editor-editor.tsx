@@ -50,11 +50,12 @@ import {
   TextQuoteIcon,
   UnderlineIcon
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export default function TiptapEditor({ defaultValue, onChange, onSave }: {
+export default function TiptapEditor({ defaultValue, action, onChange, onSave }: {
   defaultValue?: Content,
+  action?: (editor: Editor) => ReactNode,
   onChange?: (value: JSONContent, editor: Editor) => void,
   onSave?: (values: { json: JSONContent, html: string }, editor: Editor) => void,
 }) {
@@ -274,9 +275,7 @@ export default function TiptapEditor({ defaultValue, onChange, onSave }: {
           <ListIcon className="!size-3.5" />
         </Button>
       </div>
-      <Button size="sm" className="gap-2" onClick={() => onSave?.({ json: editor.getJSON(), html: editor.getHTML() }, editor)}>
-        Save
-      </Button>
+      {action ? action(editor) : <></>}
     </div>
     <EditorContent
       editor={editor}
