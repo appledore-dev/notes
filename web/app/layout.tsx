@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { UserProvider } from '@/hooks/use-user'
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata, Viewport } from 'next'
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={GeistSans.className}>
-        <UserProvider>
-          {children}
-        </UserProvider>
+        <TooltipProvider delayDuration={0}>
+          <UserProvider>
+            {children}
+          </UserProvider>
+        </TooltipProvider>
         <Toaster />
       </body>
     </html>

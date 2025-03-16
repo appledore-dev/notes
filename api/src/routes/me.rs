@@ -3,8 +3,6 @@ use axum::{
     Extension, http::StatusCode,
 };
 use serde::{Serialize};
-use serde_json::Value;
-use uuid::Uuid;
 
 use crate::auth::CurrentUser;
 

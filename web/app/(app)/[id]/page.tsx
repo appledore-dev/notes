@@ -7,9 +7,13 @@ import { Separator } from '@/components/ui/separator'
 import {
   SidebarTrigger
 } from '@/components/ui/sidebar'
+import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip'
 import { useUser } from '@/hooks/use-user'
+import { ReloadIcon } from '@radix-ui/react-icons'
+import { TooltipContent } from '@radix-ui/react-tooltip'
 import { Content } from '@tiptap/react'
-import { Trash2Icon } from 'lucide-react'
+import isEqual from 'lodash.isequal'
+import { CheckIcon, Edit3Icon, Trash2Icon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -67,30 +71,38 @@ export default function Page() {
         defaultValue={value}
         onChange={content => setValue(content)}
         action={(editor) => <div className="flex gap-2">
-          <Button size="sm" onClick={async () => {
-            if (!user) return
-            setLoading(true)
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
-              method: 'PUT',
-              body: JSON.stringify({
-                title: doc?.title || 'Untitled Document',
-                content_json: editor.getJSON(),
-                content_text: editor.getHTML(),
-              }),
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-              },
-            })
-            setLoading(false)
-            if (res.ok) {
-              const data = await res.json()
-              setDoc(data?.doc || null)
-              setValue(data?.doc?.content_json || null)
-            }
-          }} disabled={loading}>
-            Update
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" onClick={async () => {
+                if (!user) return
+                setLoading(true)
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    title: doc?.title || 'Untitled Document',
+                    content_json: editor.getJSON(),
+                    content_text: editor.getHTML(),
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                  },
+                })
+                setLoading(false)
+                if (res.ok) {
+                  const data = await res.json()
+                  setDoc(data?.doc || null)
+                  setValue(data?.doc?.content_json || null)
+                }
+              }} disabled={loading || isEqual(doc?.content_json, editor.getJSON())} className="gap-2">
+                {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <Edit3Icon className="!size-3.5" />}
+                {loading ? 'Updating' : isEqual(doc?.content_json, editor.getJSON()) ? 'Updated' : 'Update'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              Update at {new Date().toLocaleTimeString('en-US')}
+            </TooltipContent>
+          </Tooltip>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" className="!size-8 px-0 !text-red-400" disabled={loading}>

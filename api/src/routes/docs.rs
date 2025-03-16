@@ -12,7 +12,7 @@ use crate::auth::CurrentUser;
 pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
     let docs = query!(
         r#"
-        SELECT id, title FROM docs WHERE user_id = $1
+        SELECT id, title FROM docs WHERE user_id = $1 ORDER BY created_at DESC
         "#,
         Uuid::parse_str(&auth_user.id).unwrap()
     )
