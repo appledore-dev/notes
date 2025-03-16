@@ -167,7 +167,9 @@ export default function Page() {
                     setValue(data?.doc?.content_json || null)
                   }
                 }} disabled={loading || isEqual(doc?.content_json, editor.getJSON())} className="gap-2">
-                  {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <Edit3Icon className="!size-3.5" />}
+                  <span className="hidden md:inline">
+                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <Edit3Icon className="!size-3.5" />}
+                  </span>
                   {loading ? 'Updating' : isEqual(doc?.content_json, editor.getJSON()) ? 'Updated' : 'Update'}
                 </Button>
               </span>
