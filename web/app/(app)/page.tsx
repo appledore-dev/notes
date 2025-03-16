@@ -100,6 +100,7 @@ export default function Page() {
                 <Input
                   placeholder="Document Title"
                   name="title"
+                  defaultValue={new Date().toLocaleString('en-US')}
                   required
                   autoFocus
                 />
