@@ -1,7 +1,6 @@
 use argon2::{
     Argon2,
     PasswordHasher,
-    PasswordVerifier,
     password_hash::{
         Salt,
         SaltString,
@@ -25,7 +24,9 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
     )
     .fetch_one(&pool);
 
-    let password = rand::thread_rng().gen_range(100000..=999999).to_string();
+    let password = rand::rng().random_range(100000..=999999).to_string();
+    println!("Generated password: {}", password);
+
     let salt_str = SaltString::generate(&mut OsRng);
     let salt: Salt = salt_str.as_str().try_into().unwrap();
     let argon2 = Argon2::default();
@@ -42,7 +43,9 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
                 user.id
             )
             .fetch_one(&pool)
-            .await;
+            .await
+            .expect("Failed to update user");
+
             return (StatusCode::OK, Json(OtpResponse {}));
         }
         Err(_) => {
@@ -55,10 +58,15 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
                 hash.to_string(),
             )
             .fetch_one(&pool)
-            .await;
+            .await
+            .expect("Failed to insert user");
+
             return (StatusCode::OK, Json(OtpResponse {}));
         }
     }
+}
+
+async fn send_otp_email(email: &str, otp: &str) {
 }
 
 #[derive(Deserialize)]

@@ -1,5 +1,4 @@
-mod otp;
-mod prompt;
+mod routes;
 
 use axum::{
     routing::post,
@@ -20,8 +19,9 @@ async fn main() {
         .expect("Failed to create pool");
 
     let app = Router::new()
-        .route("/otp", post(otp::handler))
-        .route("/prompt", post(prompt::handler))
+        .route("/otp", post(routes::otp::handler))
+        .route("/otp-verify", post(routes::otpverify::handler))
+        .route("/prompt", post(routes::prompt::handler))
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
 
