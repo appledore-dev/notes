@@ -10,7 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LANGUAGES } from '@/lib/constant'
 import { cn } from '@/lib/utils'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { Extension } from '@tiptap/core'
+import { Extension, getAttributes } from '@tiptap/core'
 import Blockquote from '@tiptap/extension-blockquote'
 import BulletList from '@tiptap/extension-bullet-list'
 import CodeBlock from '@tiptap/extension-code-block'
@@ -70,7 +70,7 @@ const ACTION_TYPES = {
   BLUR: 'blur',
   FOCUS: 'focus',
 }
-export const OnBlurHighlight = Extension.create({
+const OnBlurHighlight = Extension.create({
   name: DECO_NAME,
 
   addProseMirrorPlugins() {
@@ -171,7 +171,6 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         multicolor: true,
       }),
       Link.configure({
-        openOnClick: true,
         autolink: true,
         linkOnPaste: true,
         defaultProtocol: 'https',
@@ -179,6 +178,37 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         HTMLAttributes: {
           rel: 'noopener noreferrer',
           target: '_blank',
+        }
+      }).extend({
+        addOptions() {
+          return {
+            ...this.parent?.(),
+            openOnClick: false
+          }
+        },
+        addProseMirrorPlugins() {
+          const plugins: Plugin[] = this.parent?.() || []
+
+          const ctrlClickHandler = new Plugin({
+            key: new PluginKey("handleControlClick"),
+            props: {
+              handleClick(view, pos, event) {
+                const attrs = getAttributes(view.state, "link")
+                const link = (event.target as HTMLElement)?.closest("a")
+
+                const keyPressed = event.ctrlKey || event.metaKey
+
+                if (keyPressed && link && attrs.href) {
+                  window.open(attrs.href, attrs.target)
+                  return true
+                }
+
+                return false
+              }
+            }
+          })
+          plugins.push(ctrlClickHandler)
+          return plugins
         }
       }),
       CodeBlockLowlight.configure({
@@ -197,6 +227,23 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       editor.commands.setContent(defaultValue)
     }
   }, [defaultValue, editor])
+
+  useEffect(() => {
+    const changeCursor = (cursor: string) => (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'meta' || e.key.toLowerCase() === 'control' || e.metaKey || e.ctrlKey) {
+        document.querySelectorAll('.tiptap a').forEach((el) => {
+          (el as HTMLElement).style.cursor = cursor
+        })
+      }
+    }
+    addEventListener('keydown', changeCursor('pointer'))
+    addEventListener('keyup', changeCursor('text'))
+
+    return () => {
+      removeEventListener('keydown', changeCursor('pointer'))
+      removeEventListener('keyup', changeCursor('text'))
+    }
+  }, [])
 
   const [loadingAi, setLoadingAi] = useState<string>()
   const [openPopover, setOpenPopover] = useState<string>()

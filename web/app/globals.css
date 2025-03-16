@@ -164,7 +164,7 @@
   }
 
   a {
-    @apply font-medium text-primary underline underline-offset-4 hover:cursor-pointer;
+    @apply font-medium text-primary underline underline-offset-4;
   }
 
   p {
