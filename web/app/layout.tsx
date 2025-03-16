@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/components/ui/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { UserProvider } from '@/hooks/use-user'
 import { GeistSans } from 'geist/font/sans'
@@ -27,11 +28,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={GeistSans.className}>
-        <TooltipProvider delayDuration={0}>
-          <UserProvider>
-            {children}
-          </UserProvider>
-        </TooltipProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange={false}
+        >
+          <TooltipProvider delayDuration={0}>
+            <UserProvider>
+              {children}
+            </UserProvider>
+          </TooltipProvider>
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

@@ -12,13 +12,10 @@ import {
 } from 'react'
 
 export type AuthUser = {
-  id: string,
-  email: string,
-  username: string,
-  name: string | null,
-  password: string | undefined | null,
-  session: string,
-  sessions: string[],
+  user: {
+    id: string,
+    email: string
+  }
 }
 
 export const UserContext = createContext<{

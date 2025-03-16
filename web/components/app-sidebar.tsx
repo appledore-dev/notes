@@ -1,6 +1,9 @@
 'use client'
 
 import { SidebarBanner } from '@/components/sidebar-banner'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -11,14 +14,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUser } from '@/hooks/use-user'
-import { CommandIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { ChevronDownIcon, CommandIcon, ComputerIcon, LogOutIcon, MoonStarIcon, SunIcon } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const p = usePathname()
+  const { theme, setTheme } = useTheme()
   const { user } = useUser()
   const [docs, setDocs] = useState<{
     id: string
@@ -104,10 +111,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-1">
-            {data.navMain.map((item) => (
+            {data.navMain.map((item, i) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={item.isActive}>
-                  <Link href={item.url} className="grid grid-cols-1">
+                  <Link href={item.url} className={cn('grid grid-cols-1', i === 0 ? 'font-medium' : '')}>
                     <span className="truncate">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -120,7 +127,84 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="p-1">
           <SidebarBanner />
         </div>
-      </SidebarFooter> : <></>}
+      </SidebarFooter> : <SidebarFooter>
+        <div className="p-1 space-y-1">
+          <Card className="shadow-none py-0 hover:cursor-pointer">
+            <Collapsible className="data-[state=open]:[&_svg.opacity-50]:rotate-180 [&_svg]:transition-all [&_svg]:duration-300">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="p-4 gap-0">
+                  <CardTitle className="flex items-center gap-4 justify-between font-medium text-sm">
+                    <div className="grid grid-cols-1 flex-1">
+                      <span className="truncate">{user?.user.email}</span>
+                    </div>
+                    <ChevronDownIcon className="!size-3.5 opacity-50" />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="p-0.5 pt-0 grid grid-cols-1 gap-2">
+                  <Button variant="ghost" className="w-full justify-start gap-2">
+                    <LogOutIcon className="!size-4 !text-red-400" />
+                    Logout
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+          <div className="flex items-center gap-4 justify-between">
+            <Tabs defaultValue={theme} onValueChange={setTheme}>
+              <TabsList>
+                <TabsTrigger value="light">
+                  <SunIcon className="!size-3" />
+                </TabsTrigger>
+                <TabsTrigger value="dark">
+                  <MoonStarIcon className="!size-3" />
+                </TabsTrigger>
+                <TabsTrigger value="system">
+                  <ComputerIcon className="!size-3" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <span className="text-xs text-muted-foreground">
+              v0.1
+            </span>
+          </div>
+          {/* <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Card className="shadow-none py-0 hover:cursor-pointer">
+                <CardHeader className="p-4 gap-0">
+                  <CardTitle className="flex items-center gap-4 justify-between font-medium text-sm">
+                    <div className="grid grid-cols-1 flex-1">
+                      <span className="truncate">{user?.user.email}</span>
+                    </div>
+                    <ChevronUpIcon className="!size-3.5 opacity-50" />
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64">
+              <Tabs defaultValue={theme} onValueChange={setTheme}>
+                <TabsList>
+                  <TabsTrigger value="light">
+                    <SunIcon className="!size-3" />
+                  </TabsTrigger>
+                  <TabsTrigger value="dark">
+                    <MoonStarIcon className="!size-3" />
+                  </TabsTrigger>
+                  <TabsTrigger value="system">
+                    <ComputerIcon className="!size-3" />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2 !text-red-400">
+                <LogOutIcon className="!size-4 !text-red-400" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu> */}
+        </div>
+      </SidebarFooter>}
     </Sidebar>
   )
 }
