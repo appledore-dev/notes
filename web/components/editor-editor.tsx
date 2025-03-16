@@ -308,47 +308,51 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         </Button>
         <Popover open={openPopoverLink} onOpenChange={setOpenPopoverLink}>
           <PopoverTrigger asChild>
-            <Button size="sm" variant="outline" className="p-0 size-8">
+            <Button size="sm" variant={editor.isActive('link') ? 'default' : 'outline'} className="p-0 size-8">
               <Link2Icon className="!size-3.5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
-            <form className="grid gap-4" onSubmit={e => {
-              e.preventDefault()
-              const data = Object.fromEntries(new FormData(e.currentTarget).entries())
-              if (!data.link) {
-                editor.chain().focus().unsetLink().run()
-                return
-              }
-              editor.chain().focus().extendMarkRange('link').setLink({ href: data.link as string }).run()
-              setOpenPopoverLink(false)
-            }}>
-              <div className="grid gap-2">
-                <div className="grid grid-cols-1 items-center gap-2">
-                  <Label htmlFor="tiptap-extension-link-url">URL</Label>
-                  <Input
-                    id="tiptap-extension-link-url"
-                    defaultValue={editor.getAttributes('link').href}
-                    className="h-8"
-                    name="link"
-                    placeholder="https://example.com"
-                    type="url"
-                  />
+            <div className="gap-2 grid grid-cols-1">
+              <form className="grid gap-4" onSubmit={e => {
+                e.preventDefault()
+                const data = Object.fromEntries(new FormData(e.currentTarget).entries())
+                if (!data.link) {
+                  editor.chain().focus().unsetLink().run()
+                  return
+                }
+                editor.chain().focus().extendMarkRange('link').setLink({ href: data.link as string }).run()
+                setOpenPopoverLink(false)
+              }}>
+                <div className="grid gap-2">
+                  <div className="grid grid-cols-1 items-center gap-2">
+                    <Label htmlFor="tiptap-extension-link-url">URL</Label>
+                    <Input
+                      id="tiptap-extension-link-url"
+                      defaultValue={editor.getAttributes('link').href}
+                      className="h-8"
+                      name="link"
+                      placeholder="https://example.com"
+                      type="url"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-end gap-1">
-                <Button size="sm" variant="outline" type="submit">
-                  {getSelectionText()?.text ? 'Set' : 'Insert'} Link
-                </Button>
-              </div>
-            </form>
+                <div className="flex justify-between items-center gap-4">
+                  {editor.isActive('link') ? <Button size="sm" variant="ghost" className="gap-2" onClick={() => {
+                    editor.chain().focus().unsetLink().run()
+                    setOpenPopoverLink(false)
+                  }}>
+                    <Link2OffIcon className="!size-3.5" />
+                    Unlink
+                  </Button> : <span></span>}
+                  <Button size="sm" variant="outline" type="submit">
+                    {editor.isActive('link') ? 'Update' : 'Add'} Link
+                  </Button>
+                </div>
+              </form>
+            </div>
           </PopoverContent>
         </Popover>
-        {editor.isActive('link') ? <Button size="sm" variant="default" className="p-0 size-8" onClick={() => {
-          editor.chain().focus().unsetLink().run()
-        }}>
-          <Link2OffIcon className="!size-3.5" />
-        </Button> : <></>}
         <Separator orientation="vertical" className="!h-8 mx-0" />
         <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
           editor.chain().focus().toggleOrderedList().run()
