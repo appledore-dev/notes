@@ -19,6 +19,7 @@ import ListItem from '@tiptap/extension-list-item'
 import OrderedList from '@tiptap/extension-ordered-list'
 import Placeholder from '@tiptap/extension-placeholder'
 import Strike from '@tiptap/extension-strike'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
 import {
@@ -55,6 +56,9 @@ import {
 } from 'lucide-react'
 import { ReactNode, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { all, createLowlight } from 'lowlight'
+
+const lowlight = createLowlight(all)
 
 export default function TiptapEditor({ defaultValue, action, onChange, onSave }: {
   defaultValue?: Content,
@@ -96,6 +100,9 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
           rel: 'noopener noreferrer',
           target: '_blank',
         }
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
       })
     ],
     onUpdate({ editor }) {
