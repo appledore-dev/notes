@@ -2,6 +2,8 @@
 
 import TiptapEditor from '@/components/editor-editor'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -31,10 +33,8 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
 
     const fetchDoc = useCallback(async () => {
-      if (!user) {
-        r.replace('/')
-        return
-      }
+      if (user === null) r.replace('/')
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
         method: 'GET',
         headers: {
@@ -64,9 +64,76 @@ export default function Page() {
           className="mr-2 data-[orientation=vertical]:h-4"
         />
         <div className="grid grid-cols-1 text-sm">
-          <span className="truncate">
-            {doc?.title || ''}
-          </span>
+          <Dialog>
+            <DialogTrigger asChild>
+              <span className="truncate hover:cursor-pointer">
+                {doc?.title || ''}
+              </span>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  Update title
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={async e => {
+                e.preventDefault()
+
+                setLoading(true)
+                const formData = new FormData(e.currentTarget)
+
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    title: formData.get('title'),
+                    content_json: value,
+                    content_text: doc?.content_text,
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                  },
+                })
+                setLoading(false)
+
+                if (!res.ok) {
+                  toast('Error', {
+                    description: await res.text(),
+                  })
+                  return
+                }
+
+                if (res.ok) {
+                  fetchDoc()
+                  toast('Success', {
+                    description: 'Document updated successfully!',
+                  })
+                  // r.replace(`/${params.id}?u=${new Date().getTime()}`)
+                  r.refresh()
+                }
+              }}>
+                <div className="pb-6">
+                  <Input
+                    placeholder="Document Title"
+                    name="title"
+                    defaultValue={doc?.title || ''}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="ghost">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={loading}>
+                    Update
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </header>

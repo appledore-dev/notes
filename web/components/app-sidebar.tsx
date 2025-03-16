@@ -107,8 +107,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {data.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={item.isActive}>
-                  <Link href={item.url}>
-                    {item.title}
+                  <Link href={item.url} className="grid grid-cols-1">
+                    <span className="truncate">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
