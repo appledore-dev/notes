@@ -8,6 +8,12 @@ use axum::{
     Json,
     Extension, http::StatusCode,
 };
+use chrono::{ Duration, Utc };
+use jsonwebtoken::{
+    encode,
+    EncodingKey,
+    Header,
+};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query};
 
@@ -23,7 +29,9 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
     match user.await {
         Ok(user) => {
             if payload.verification_code.is_empty() {
-                return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
+                return (StatusCode::BAD_REQUEST, Json(
+                    OtpVerifyResponse { access_token: None }
+                ));
             }
 
             let code = user.verification_code.clone().unwrap_or_default();
@@ -42,17 +50,41 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
                     .fetch_one(&pool)
                     .await
                     .expect("Failed to update user");
-                    return (StatusCode::OK, Json(OtpVerifyResponse {}));
+                    let token = encode_jwt(user.email)
+                        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR).unwrap();
+                    return (StatusCode::OK, Json(
+                        OtpVerifyResponse { access_token: Some(token) }
+                    ));
                 }
                 Err(_) => {
-                    return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
+                    return (StatusCode::BAD_REQUEST, Json(
+                        OtpVerifyResponse { access_token: None }
+                    ));
                 }
             }
         }
         Err(_) => {
-            return (StatusCode::BAD_REQUEST, Json(OtpVerifyResponse {}));
+            return (StatusCode::BAD_REQUEST, Json(
+                OtpVerifyResponse { access_token: None }
+            ));
         }
     }
+}
+
+pub fn encode_jwt(email: String) -> Result<String, StatusCode> {
+    let secret: String = std::env::var("SECRET").expect("SECRET must be set").as_str().to_string();
+    let now = Utc::now();
+    let expire: chrono::TimeDelta = Duration::hours(24);
+    let exp: usize = (now + expire).timestamp() as usize;
+    let iat: usize = now.timestamp() as usize;
+    let claim = Claims { iat, exp, email };
+
+    encode(
+        &Header::default(),
+        &claim,
+        &EncodingKey::from_secret(secret.as_ref()),
+    )
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 #[derive(Deserialize)]
@@ -62,4 +94,13 @@ pub struct OtpVerifyRequest {
 }
 
 #[derive(Serialize)]
-pub struct OtpVerifyResponse {}
+pub struct OtpVerifyResponse {
+    access_token: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Claims {
+    pub exp: usize,
+    pub iat: usize,
+    pub email: String,
+}
