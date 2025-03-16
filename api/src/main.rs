@@ -24,6 +24,9 @@ async fn main() {
         .route("/otp", post(routes::otp::handler))
         .route("/otp-verify", post(routes::otpverify::handler))
         .route("/prompt", post(routes::prompt::handler))
+        .route("/me",
+            get(routes::me::handler)
+            .layer(middleware::from_fn(auth::authorize)))
         .route("/docs",
             get(routes::docs::get_handler).post(routes::docs::post_handler)
             .layer(middleware::from_fn(auth::authorize)))
