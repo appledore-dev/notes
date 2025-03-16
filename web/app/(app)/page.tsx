@@ -95,7 +95,6 @@ export default function Page() {
               }
 
               if (res.ok) {
-
                 localStorage.removeItem('tiptap-content')
                 editor.commands.clearContent()
                 setValue(null)
@@ -124,7 +123,7 @@ export default function Page() {
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog> : <DialogLogin>
+        </Dialog> : <DialogLogin description="Sign in or create an account with your email to save your document.">
           <Button size="sm">
             Save
           </Button>

@@ -31,7 +31,7 @@ export function DialogLogin({ title, description, children }: {
           {title || 'Sign in with Email'}
         </DialogTitle>
         <DialogDescription>
-          {description || 'Enter your email address to receive a one-time password (OTP) for signing in.'}
+          {description || 'Enter your email address to receive a one-time password for signing in.'}
         </DialogDescription>
       </DialogHeader>
       {step === 'ask-email' ? <form onSubmit={async e => {
