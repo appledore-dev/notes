@@ -65,7 +65,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   const editor = useEditor({
     editorProps: {
       attributes: {
-        class: cn('p-4 !h-[calc(100svh-2rem-36px-56px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed'),
+        class: cn('p-4 !h-[calc(100svh-2rem-36px-58px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed border-muted-foreground/40'),
       },
     },
     extensions: [
@@ -155,7 +155,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     editor.commands.insertContent(json.result.trim())
   }
 
-  return editor ? <div className="relative space-y-2 flex flex-col w-full justify-start max-w-prose mx-auto">
+  return editor ? <div className="relative space-y-2.5 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex items-center gap-4 justify-between w-full">
       <div className="flex gap-2 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5 flex-1">
         <Select
