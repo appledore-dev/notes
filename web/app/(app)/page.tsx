@@ -44,7 +44,7 @@ export default function Page() {
       <TiptapEditor
         defaultValue={value}
         onChange={content => setValue(content)}
-        action={(editor) => <Button size="sm" className="gap-2">
+        action={(editor) => <Button size="sm">
           Save
         </Button>}
       />
