@@ -12,7 +12,7 @@ use crate::auth::CurrentUser;
 pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
     let docs = query!(
         r#"
-        SELECT * FROM docs WHERE user_id = $1
+        SELECT id, title FROM docs WHERE user_id = $1
         "#,
         Uuid::parse_str(&auth_user.id).unwrap()
     )
@@ -22,12 +22,12 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user
 
     let docs: Vec<Doc> = docs.into_iter().map(|doc| Doc {
         id: doc.id.to_string(),
-        user_id: doc.user_id.to_string(),
         title: doc.title,
-        content_text: doc.content_text,
-        content_json: doc.content_json,
-        created_at: doc.created_at.expect("Failed to parse created_at").to_string(),
-        updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
+        user_id: None,
+        content_text: None,
+        content_json: None,
+        created_at: None,
+        updated_at: None,
     }).collect();
 
     (StatusCode::OK, Json(DocsResponse { docs, error: None }))
@@ -62,12 +62,12 @@ pub async fn post_handler(
 
     let result: Doc = Doc {
         id: doc.id.to_string(),
-        user_id: doc.user_id.to_string(),
         title: doc.title,
-        content_text: doc.content_text,
-        content_json: doc.content_json,
-        created_at: doc.created_at.expect("Failed to parse created_at").to_string(),
-        updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
+        user_id: Some(doc.user_id.to_string()),
+        content_text: Some(doc.content_text),
+        content_json: Some(doc.content_json),
+        created_at: Some(doc.created_at.expect("Failed to parse created_at").to_string()),
+        updated_at: Some(doc.updated_at.expect("Failed to parse updated_at").to_string()),
     };
 
     (StatusCode::OK, Json(DocResponse { doc: Some(result), error: None }))
@@ -95,12 +95,12 @@ pub struct DocResponse {
 #[derive(Serialize)]
 pub struct Doc {
     pub id: String,
-    pub user_id: String,
     pub title: String,
-    pub content_text: String,
-    pub content_json: Value,
-    pub created_at: String,
-    pub updated_at: String,
+    pub user_id: Option<String>,
+    pub content_text: Option<String>,
+    pub content_json: Option<Value>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 #[derive(Serialize)]
