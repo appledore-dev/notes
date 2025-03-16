@@ -11,9 +11,12 @@ import {
 } from '@/components/ui/sidebar'
 import { useUser } from '@/hooks/use-user'
 import { Content } from '@tiptap/react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export default function Page() {
+  const r = useRouter()
   const { user } = useUser()
   const [value, setValue] = useState<Content>(null)
   const [loading, setLoading] = useState(false)
@@ -65,10 +68,47 @@ export default function Page() {
                 Input the title of your document to save it.
               </DialogDescription>
             </DialogHeader>
-            <form>
+            <form onSubmit={async e => {
+              e.preventDefault()
+              setLoading(true)
+              const formData = new FormData(e.currentTarget)
+
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  title: formData.get('title'),
+                  content_json: value,
+                  content_text: editor.getHTML(),
+                }),
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                },
+              })
+              setLoading(false)
+
+              if (!res.ok) {
+                toast('Error', {
+                  description: await res.text(),
+                })
+                return
+              }
+
+              if (res.ok) {
+
+                localStorage.removeItem('tiptap-content')
+                editor.commands.clearContent()
+                setValue(null)
+
+                const json = await res.json()
+                r.push(`/${json?.doc?.id}`)
+              }
+            }}>
               <div className="pb-6">
                 <Input
                   placeholder="Document Title"
+                  name="title"
+                  required
                   autoFocus
                 />
               </div>
