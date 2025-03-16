@@ -1,7 +1,7 @@
 mod routes;
 
 use axum::{
-    routing::post,
+    routing::{post, get},
     Extension, Router,
 };
 use dotenvy::dotenv;
@@ -22,6 +22,7 @@ async fn main() {
         .route("/otp", post(routes::otp::handler))
         .route("/otp-verify", post(routes::otpverify::handler))
         .route("/prompt", post(routes::prompt::handler))
+        .route("/docs", get(routes::docs::get_handler).post(routes::docs::post_handler))
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
 
