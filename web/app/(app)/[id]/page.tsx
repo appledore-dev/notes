@@ -15,22 +15,20 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 import { JSONContent } from '@tiptap/react'
 import { CheckIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function Page() {
   const r = useRouter()
   const { user } = useUser()
   const params = useParams()
+  const [value, setValue] = useState<JSONContent | null>(null)
   const [doc, setDoc] = useState<{
     id: string
     title: string
     content_json: JSONContent
     content_text: string
   } | null>(null)
-  const defaultValue = useMemo<JSONContent | undefined>(() => {
-    return doc?.content_json
-  }, [doc])
   const [loading, setLoading] = useState(false)
 
     const fetchDoc = useCallback(async () => {
@@ -86,7 +84,7 @@ export default function Page() {
                   method: 'PUT',
                   body: JSON.stringify({
                     title: formData.get('title'),
-                    content_json: doc?.content_json,
+                    content_json: value,
                     content_text: doc?.content_text,
                   }),
                   headers: {
@@ -138,8 +136,8 @@ export default function Page() {
     </header>
     <div className="flex flex-1 flex-col gap-4 p-4 py-0">
       <TiptapEditor
-        defaultValue={defaultValue}
-        onChange={content => setDoc(prev => ({ ...prev, content_json: content } as any))}
+        defaultValue={doc?.content_json || null}
+        onChange={setValue}
         action={(editor) => <div className="flex gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
