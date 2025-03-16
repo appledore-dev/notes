@@ -9,11 +9,12 @@ use uuid::Uuid;
 
 use crate::auth::CurrentUser;
 
-pub async fn get_handler(Extension(pool): Extension<PgPool>) -> (StatusCode, Json<DocsResponse>) {
+pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
     let docs = query!(
         r#"
-        SELECT * FROM docs
+        SELECT * FROM docs WHERE user_id = $1
         "#,
+        Uuid::parse_str(&auth_user.id).unwrap()
     )
     .fetch_all(&pool)
     .await
@@ -32,7 +33,11 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>) -> (StatusCode, Jso
     (StatusCode::OK, Json(DocsResponse { docs, error: None }))
 }
 
-pub async fn post_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>, Json(payload): Json<DocsRequest>) -> (StatusCode, Json<DocsResponse>) {
+pub async fn post_handler(
+    Extension(pool): Extension<PgPool>,
+    Extension(auth_user): Extension<CurrentUser>,
+    Json(payload): Json<DocsRequest>
+) -> (StatusCode, Json<DocResponse>) {
     let data = CreateDoc {
         title: payload.title,
         content_text: payload.content_text,
@@ -65,7 +70,7 @@ pub async fn post_handler(Extension(pool): Extension<PgPool>, Extension(auth_use
         updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
     };
 
-    (StatusCode::OK, Json(DocsResponse { docs: vec![result], error: None }))
+    (StatusCode::OK, Json(DocResponse { doc: Some(result), error: None }))
 }
 
 #[derive(Deserialize)]
@@ -78,6 +83,12 @@ pub struct DocsRequest {
 #[derive(Serialize)]
 pub struct DocsResponse {
     docs: Vec<Doc>,
+    error: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct DocResponse {
+    doc: Option<Doc>,
     error: Option<String>,
 }
 

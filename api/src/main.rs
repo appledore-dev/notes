@@ -26,8 +26,12 @@ async fn main() {
         .route("/prompt", post(routes::prompt::handler))
         .route("/docs",
             get(routes::docs::get_handler).post(routes::docs::post_handler)
-            .layer(middleware::from_fn(auth::authorize))
-        )
+            .layer(middleware::from_fn(auth::authorize)))
+        .route("/docs/{doc_id}",
+            get(routes::docdetails::get_handler)
+            .put(routes::docdetails::put_handler)
+            .delete(routes::docdetails::delete_handler)
+            .layer(middleware::from_fn(auth::authorize)))
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
 

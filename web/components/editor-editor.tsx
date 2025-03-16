@@ -33,7 +33,6 @@ export default function TiptapEditor({ defaultValue, onChange }: {
 }) {
   const isMobile = useIsMobile()
   const editor = useEditor({
-    autofocus: 'start',
     editorProps: {
       attributes: {
         class: cn('p-4 !h-[calc(100svh-2rem-36px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed'),
@@ -82,7 +81,6 @@ export default function TiptapEditor({ defaultValue, onChange }: {
 
   const [loadingAi, setLoadingAi] = useState<string>()
   const [openPopover, setOpenPopover] = useState<string>()
-
   const getSelectionText = () => {
     if (!editor) return null
     const { view, state } = editor
@@ -98,7 +96,7 @@ export default function TiptapEditor({ defaultValue, onChange }: {
     if (!editor) return
 
     setLoadingAi(prompt)
-    editor.chain().focus().setHighlight({ color: 'black' }).run()
+    // editor.chain().focus().setHighlight({ color: 'black' }).run()
 
     const selection = getSelectionText() as { from: number, to: number, text: string }
 
@@ -123,7 +121,7 @@ export default function TiptapEditor({ defaultValue, onChange }: {
     }
 
     const json = await resp.json()
-    editor.chain().focus().unsetHighlight().run()
+    // editor.chain().focus().unsetHighlight().run()
     editor.commands.insertContent(json.result.trim())
   }
 
@@ -259,9 +257,9 @@ export default function TiptapEditor({ defaultValue, onChange }: {
       editor={editor}
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
       className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}
-      shouldShow={() => {
-        return !!getSelectionText()?.text
-      }}
+      // shouldShow={() => {
+      //   return !!getSelectionText()?.text
+      // }}
     >
       <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
         {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
