@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useUser } from '@/hooks/use-user'
 import { Content } from '@tiptap/react'
+import { Edit3Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -55,7 +56,8 @@ export default function Page() {
         onChange={content => setValue(content)}
         action={(editor) => user ? <Dialog>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="gap-2">
+              <Edit3Icon className="!size-3.5" />
               Save
             </Button>
           </DialogTrigger>

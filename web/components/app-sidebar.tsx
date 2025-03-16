@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         })),
       ].map((item) => ({
         ...item,
-        isActive: item.url === p,
+        isActive: item.url === p.split(':')[0],
       })),
     })
   }, [p, docs])

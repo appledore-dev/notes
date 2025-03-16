@@ -35,7 +35,7 @@ export default function Page() {
     const fetchDoc = useCallback(async () => {
       if (user === null) r.replace('/')
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${decodeURIComponent(params.id?.toString() || '').split(':')[0]}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export default function Page() {
                 setLoading(true)
                 const formData = new FormData(e.currentTarget)
 
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${doc?.id}`, {
                   method: 'PUT',
                   body: JSON.stringify({
                     title: formData.get('title'),
@@ -108,8 +108,7 @@ export default function Page() {
                   toast('Success', {
                     description: 'Document updated successfully!',
                   })
-                  // r.replace(`/${params.id}?u=${new Date().getTime()}`)
-                  r.refresh()
+                  r.replace(`/${doc?.id}:${new Date().getTime()}`)
                 }
               }}>
                 <div className="pb-6">
@@ -148,7 +147,7 @@ export default function Page() {
                 <Button size="sm" onClick={async () => {
                   if (!user) return
                   setLoading(true)
-                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${doc?.id}`, {
                     method: 'PUT',
                     body: JSON.stringify({
                       title: doc?.title || 'Untitled Document',
@@ -196,7 +195,7 @@ export default function Page() {
                 <div className="flex justify-end">
                   <Button variant="outline" size="sm" className="gap-2 !text-red-400" onClick={async () => {
                     setLoading(true)
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${params.id}`, {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${doc?.id}`, {
                       method: 'DELETE',
                       headers: {
                         'Content-Type': 'application/json',
