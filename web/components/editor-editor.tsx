@@ -400,11 +400,18 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     <FloatingMenu editor={editor} tippyOptions={{ placement: 'bottom-start', zIndex: 50 }} shouldShow={({ state }) => {
       const { from, to } = state.selection
       const text = state.doc.textBetween(from - 1, to)
-      return text.endsWith('/')
-    }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-30', editor?.isEditable ? '' : 'hidden')}>
+      return text.endsWith('/') && state.selection.empty
+    }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-30 min-w-56', editor?.isEditable ? '' : 'hidden')}>
       <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
         const selection = getSelectionText()
-        runAi('continue', editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim())
+        const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
+        if (!context) {
+          toast('Error', {
+            description: 'Please write something before using this feature.',
+          })
+          return
+        }
+        runAi('continue from the selected text!', context)
       }} disabled={!!loadingAi}>
         {loadingAi === 'continue' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
         Continue

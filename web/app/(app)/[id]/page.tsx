@@ -57,7 +57,7 @@ export default function Page() {
 
   return <>
     <header className="flex h-16 shrink-0 items-center gap-6 justify-between px-4">
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center max-w-prose mx-auto w-full">
         <SidebarTrigger className="-ml-1" />
         <Separator
           orientation="vertical"
