@@ -128,7 +128,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarBanner />
         </div>
       </SidebarFooter> : <SidebarFooter>
-        <div className="p-1 space-y-1">
+        <div className="p-1 space-y-2">
           <Card className="shadow-none py-0 hover:cursor-pointer">
             <Collapsible className="data-[state=open]:[&_svg.opacity-50]:rotate-180 [&_svg]:transition-all [&_svg]:duration-300">
               <CollapsibleTrigger asChild>
@@ -143,7 +143,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="p-0.5 pt-0 grid grid-cols-1 gap-2">
-                  <Button variant="ghost" className="w-full justify-start gap-2">
+                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {
+                    localStorage.removeItem('access_token')
+                    location.replace('/')
+                  }}>
                     <LogOutIcon className="!size-4 !text-red-400" />
                     Logout
                   </Button>

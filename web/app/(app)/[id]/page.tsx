@@ -14,7 +14,7 @@ import { useUser } from '@/hooks/use-user'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { Content } from '@tiptap/react'
 import isEqual from 'lodash.isequal'
-import { CheckIcon, Edit3Icon, Trash2Icon } from 'lucide-react'
+import { CheckIcon, Edit3Icon, Trash2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -168,7 +168,7 @@ export default function Page() {
                   }
                 }} disabled={loading || isEqual(doc?.content_json, editor.getJSON())} className="gap-2">
                   <span className="hidden md:inline">
-                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <Edit3Icon className="!size-3.5" />}
+                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : isEqual(doc?.content_json, editor.getJSON()) ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
                   </span>
                   {loading ? 'Updating' : isEqual(doc?.content_json, editor.getJSON()) ? 'Updated' : 'Update'}
                 </Button>
