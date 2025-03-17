@@ -145,7 +145,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="p-0.5 pt-0 grid grid-cols-1 gap-2">
-                  <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => {
+                  <Button variant="ghost" className="w-full justify-start gap-2 rounded-xl" onClick={() => {
                     localStorage.removeItem('access_token')
                     location.replace('/')
                   }}>
