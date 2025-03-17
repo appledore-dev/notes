@@ -87,7 +87,7 @@ A simple AI text editor that allows users to edit and improve their text using A
     cd web && \
     bun install && \
     bun run build && \
-    bun .next/standalone/server.js
+    bun start
     ```
 
     Open your browser and navigate to `http://localhost:3000`
