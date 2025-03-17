@@ -545,7 +545,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         }
         runAi('continue from the selected text!', context)
       }} disabled={!!loadingAi}>
-        {loadingAi === 'continue' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
+        {loadingAi === 'continue from the selected text!' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
         Continue
       </Button>
     </FloatingMenu>
