@@ -12,6 +12,9 @@ A simple AI text editor that allows users to edit and improve their text using A
 - [x] Data persistence using PostgreSQL
 - [x] Create, read, update, and delete documents
 - [x] Dark mode support
+- [ ] Load more documents/pagination
+- [ ] Document sharing
+- [ ] Personalized writing style
 
 ![screenshot](/aite-ss.png)
 
@@ -57,14 +60,7 @@ A simple AI text editor that allows users to edit and improve their text using A
     git clone git@github.com:hatchways-community/senior-full-stack-engineer-ai-work-sample-a8f597bb35ef46998c617b1f2bfc4981.git
     ```
 
-2. Build the API
-
-    ```bash
-    cd api && \
-    cargo build --release
-    ```
-
-3. Create and migrate the database
+2. Create and migrate the database
 
     ```bash
     # cargo install sqlx-cli && \
@@ -72,16 +68,18 @@ A simple AI text editor that allows users to edit and improve their text using A
     sqlx migrate run
     ```
 
-4. Run the API
+3. Build & run the API
 
     ```bash
+    cd api && \
+    cargo build --release && \
     cargo run --release
     ```
 
     By default, the API will run on `http://localhost:4002`
 
 
-5. Build & run the frontend
+4. Build & run the frontend
 
     ```bash
     cd web && \
@@ -91,3 +89,13 @@ A simple AI text editor that allows users to edit and improve their text using A
     ```
 
     Open your browser and navigate to `http://localhost:3000`
+
+    **Note.** If you want to use the standalone server, you can run the following command right after the `bun run build` command:
+
+    ```bash
+    cp -r ./public ./.next/standalone && \
+    cp -r ./.next/static ./.next/standalone/.next && \
+    rm -rf ./.next/standalone/node_modules && \
+    cp -r ./node_modules ./.next/standalone && \
+    bun ./.next/standalone/server.js
+    ```
