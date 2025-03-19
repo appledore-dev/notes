@@ -25,7 +25,7 @@ export function DialogLogin({ title, description, children }: {
     <DialogTrigger asChild>
       {children}
     </DialogTrigger>
-    <DialogContent>
+    <DialogContent className="sm:max-w-sm">
       <DialogHeader>
         <DialogTitle>
           {step === 'ask-otp' ? 'Input One-time Password' : title || 'Sign in with Email'}
@@ -74,11 +74,11 @@ export function DialogLogin({ title, description, children }: {
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="ghost">
+            <Button size="sm" type="button" variant="ghost">
               Cancel
             </Button>
           </DialogClose>
-          <Button type="submit" disabled={loading}>
+          <Button size="sm" type="submit" disabled={loading}>
             {loading ? <ReloadIcon className="animate-spin !size-4" /> : <></>}
             Send OTP
           </Button>
@@ -122,13 +122,13 @@ export function DialogLogin({ title, description, children }: {
       }}>
         <div className="space-y-2 pb-6">
           <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
-            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-4xl [&>div]:text-2xl w-full">
+            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-2xl [&>div]:text-lg w-full">
               <InputOTPSlot index={0} autoFocus tabIndex={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />
             </InputOTPGroup>
             <InputOTPSeparator />
-            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-4xl [&>div]:text-2xl w-full">
+            <InputOTPGroup className="[&>div]:grow [&>div]:h-full [&>div]:w-full [&>div]:aspect-square [&>div]:md:text-2xl [&>div]:text-lg w-full">
               <InputOTPSlot index={3} />
               <InputOTPSlot index={4} />
               <InputOTPSlot index={5} />
@@ -137,11 +137,11 @@ export function DialogLogin({ title, description, children }: {
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="ghost">
+            <Button size="sm" type="button" variant="ghost">
               Cancel
             </Button>
           </DialogClose>
-          <Button type="submit" disabled={loading}>
+          <Button size="sm" type="submit" disabled={loading}>
             {loading ? <ReloadIcon className="animate-spin !size-4" /> : <></>}
             Verify
           </Button>

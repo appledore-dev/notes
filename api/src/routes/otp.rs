@@ -13,6 +13,7 @@ use axum::{
 };
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::transport::smtp::{authentication::{Credentials}};
+use lettre::message::{MultiPart, SinglePart};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::env::var;
@@ -77,7 +78,12 @@ async fn send_otp_email(to: &str, otp: &str) {
         )
         .to(to.parse().unwrap())
         .subject(format!("Your OTP Code: {}", otp))
-        .body(format!("Hello!\n\nYour OTP code is: {}", otp))
+        .multipart(
+            MultiPart::alternative()
+                .singlepart(
+                    SinglePart::html(format!("<h3>Hello! 👋</h3><p>Your OTP code for <strong>Notes - Helpedby AI</strong> is: {}</p>", otp))
+                )
+        )
         .unwrap();
 
     let creds = Credentials::new(
