@@ -6,9 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import {
-  SidebarTrigger
-} from '@/components/ui/sidebar'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useUser } from '@/hooks/use-user'
 import { ReloadIcon } from '@radix-ui/react-icons'
@@ -45,6 +43,7 @@ export default function Page() {
       if (res.ok) {
         const data = await res.json()
         setDoc(data?.doc || null)
+        setValue(data?.doc?.content_json || null)
       } else {
         r.replace('/')
       }
@@ -166,11 +165,11 @@ export default function Page() {
                     const data = await res.json()
                     setDoc(data?.doc || null)
                   }
-                }} disabled={loading || doc?.content_text === editor.getHTML()} className="gap-2">
+                }} disabled={loading || doc?.content_text === editor.getText()} className="gap-2">
                   <span className="hidden md:inline">
-                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : doc?.content_text === editor.getHTML() ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
+                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : doc?.content_text === editor.getText() ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
                   </span>
-                  {doc?.content_text === editor.getHTML() ? 'Updated' : 'Update'}
+                  {doc?.content_text === editor.getText() ? 'Updated' : 'Update'}
                 </Button>
               </span>
             </TooltipTrigger>

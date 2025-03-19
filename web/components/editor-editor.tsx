@@ -219,6 +219,19 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     onUpdate({ editor }) {
       const json = editor.getJSON()
       onChange?.(json, editor)
+
+      window.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
+          document.querySelectorAll('.tiptap a').forEach((el) => {
+            el.classList.add('hover:cursor-pointer')
+          })
+        }
+        window.addEventListener('keyup', (e: KeyboardEvent) => {
+          document.querySelectorAll('.tiptap a').forEach((el) => {
+            el.classList.remove('hover:cursor-pointer')
+          })
+        })
+      })
     }
   })
 
@@ -229,19 +242,24 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   }, [defaultValue, editor])
 
   useEffect(() => {
-    const changeCursor = (cursor: string) => (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'meta' || e.key.toLowerCase() === 'control' || e.metaKey || e.ctrlKey) {
+    const trigger = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
         document.querySelectorAll('.tiptap a').forEach((el) => {
-          (el as HTMLElement).style.cursor = cursor
+          el.classList.add('hover:cursor-pointer')
         })
       }
+      window.addEventListener('keyup', (e: KeyboardEvent) => {
+        document.querySelectorAll('.tiptap a').forEach((el) => {
+          el.classList.remove('hover:cursor-pointer')
+        })
+      })
     }
-    addEventListener('keydown', changeCursor('pointer'))
-    addEventListener('keyup', changeCursor('text'))
-
+    window.addEventListener('keydown', trigger)
     return () => {
-      removeEventListener('keydown', changeCursor('pointer'))
-      removeEventListener('keyup', changeCursor('text'))
+      window.removeEventListener('keydown', trigger)
+      document.querySelectorAll('.tiptap a').forEach((el) => {
+        el.classList.remove('hover:cursor-pointer')
+      })
     }
   }, [])
 
