@@ -72,7 +72,8 @@ export default function Page() {
                 body: JSON.stringify({
                   title: formData.get('title'),
                   content_json: editor.getJSON(),
-                  content_text: editor.getHTML(),
+                  content_text: editor.getText(),
+                  content_html: editor.getHTML(),
                 }),
                 headers: {
                   'Content-Type': 'application/json',

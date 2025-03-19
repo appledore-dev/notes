@@ -32,6 +32,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     id: string
     title: string
   }[]>([])
+  // const isMobile = useIsMobile()
+  // const r = useRouter()
+  // const [loading, setLoading] = useState(false)
 
   const [data, setData] = useState<{
     navMain: {
@@ -110,7 +113,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarMenu className="gap-1">
             {data.navMain.map((item, i) => (
               <SidebarMenuItem key={item.url}>
@@ -120,6 +123,70 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span className="truncate">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
+                {/* <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuAction showOnHover className="hover:cursor-pointer">
+                      <MoreHorizontal />
+                      <span className="sr-only">More</span>
+                    </SidebarMenuAction>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-56 rounded-lg"
+                    side={isMobile ? "bottom" : "right"}
+                    align={isMobile ? "end" : "start"}
+                  >
+                    <DropdownMenuItem className="gap-2">
+                      <Edit3Icon className="!text-primary/60" />
+                      <span>Edit Title</span>
+                    </DropdownMenuItem>
+                    <Popover modal>
+                      <PopoverTrigger asChild>
+                        <DropdownMenuItem className="gap-2 !text-destructive" onSelect={e => e.preventDefault()}>
+                          <Trash2Icon className="!text-destructive/60" />
+                          <span>Remove</span>
+                        </DropdownMenuItem>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="end">
+                        <div className="grid gap-4">
+                          <div className="space-y-2">
+                            <h4 className="font-medium leading-none">
+                              Delete Confirmation
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Are you sure you want to delete <span className="font-medium">{item?.title}?</span> This action cannot be undone.
+                            </p>
+                          </div>
+                          <div className="flex justify-end">
+                            <Button variant="outline" size="sm" className="gap-2 !text-red-400" onClick={async () => {
+                              setLoading(true)
+                              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${item?.url.split('/').at(-1)}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                                },
+                              })
+                              setLoading(false)
+                              if (!res.ok) {
+                                toast('Error', {
+                                  description: await res.text(),
+                                })
+                                return
+                              }
+                              toast('Success', {
+                                description: 'Document deleted successfully!',
+                              })
+                              r.replace('/')
+                            }} disabled={loading}>
+                              <Trash2Icon className="!size-3.5" />
+                              Confirm
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </DropdownMenuContent>
+                </DropdownMenu> */}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>

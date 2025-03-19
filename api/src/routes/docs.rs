@@ -26,6 +26,7 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user
         user_id: None,
         content_text: None,
         content_json: None,
+        content_html: None,
         created_at: None,
         updated_at: None,
     }).collect();
@@ -42,19 +43,21 @@ pub async fn post_handler(
         title: payload.title,
         content_text: payload.content_text,
         content_json: payload.content_json,
+        content_html: payload.content_html,
         user_id: auth_user.id.to_string()
     };
 
     let doc = query!(
         r#"
-        INSERT INTO docs (user_id, title, content_text, content_json)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, user_id, title, content_text, content_json, created_at, updated_at
+        INSERT INTO docs (user_id, title, content_text, content_json, content_html)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, user_id, title, content_text, content_json, content_html, created_at, updated_at
         "#,
         Uuid::parse_str(&data.user_id).unwrap(),
         data.title,
         data.content_text,
         data.content_json,
+        data.content_html,
     )
     .fetch_one(&pool)
     .await
@@ -66,6 +69,7 @@ pub async fn post_handler(
         user_id: Some(doc.user_id.to_string()),
         content_text: Some(doc.content_text),
         content_json: Some(doc.content_json),
+        content_html: Some(doc.content_html),
         created_at: Some(doc.created_at.expect("Failed to parse created_at").to_string()),
         updated_at: Some(doc.updated_at.expect("Failed to parse updated_at").to_string()),
     };
@@ -78,6 +82,7 @@ pub struct DocsRequest {
     title: String,
     content_text: String,
     content_json: Value,
+    content_html: String,
 }
 
 #[derive(Serialize)]
@@ -99,6 +104,7 @@ pub struct Doc {
     pub user_id: Option<String>,
     pub content_text: Option<String>,
     pub content_json: Option<Value>,
+    pub content_html: Option<String>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
@@ -109,4 +115,5 @@ pub struct CreateDoc {
     pub title: String,
     pub content_text: String,
     pub content_json: Value,
+    pub content_html: String,
 }

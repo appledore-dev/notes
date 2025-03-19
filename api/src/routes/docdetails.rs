@@ -32,6 +32,7 @@ pub async fn get_handler(
                 title: doc.title,
                 content_text: doc.content_text,
                 content_json: doc.content_json,
+                content_html: doc.content_html,
                 created_at: doc.created_at.expect("Failed to parse created_at").to_string(),
                 updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
             };
@@ -51,12 +52,13 @@ pub async fn put_handler(
 ) -> (StatusCode, Json<DocResponse>) {
     let doc = query!(
         r#"
-        UPDATE docs SET title = $1, content_text = $2, content_json = $3 WHERE id = $4 AND user_id = $5
-        RETURNING id, user_id, title, content_text, content_json, created_at, updated_at
+        UPDATE docs SET title = $1, content_text = $2, content_json = $3, content_html = $4 WHERE id = $5 AND user_id = $6
+        RETURNING id, user_id, title, content_text, content_json, content_html, created_at, updated_at
         "#,
         payload.title,
         payload.content_text,
         payload.content_json,
+        payload.content_html,
         Uuid::parse_str(&doc_id).unwrap(),
         Uuid::parse_str(&auth_user.id).unwrap()
     )
@@ -70,6 +72,7 @@ pub async fn put_handler(
                 title: doc.title,
                 content_text: doc.content_text,
                 content_json: doc.content_json,
+                content_html: doc.content_html,
                 created_at: doc.created_at.expect("Failed to parse created_at").to_string(),
                 updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
             };
@@ -89,7 +92,7 @@ pub async fn delete_handler(
     let doc = query!(
         r#"
         DELETE FROM docs WHERE id = $1 AND user_id = $2
-        RETURNING id, user_id, title, content_text, content_json, created_at, updated_at
+        RETURNING id, user_id, title, content_text, content_json, content_html, created_at, updated_at
         "#,
         Uuid::parse_str(&doc_id).unwrap(),
         Uuid::parse_str(&auth_user.id).unwrap()
@@ -104,6 +107,7 @@ pub async fn delete_handler(
                 title: doc.title,
                 content_text: doc.content_text,
                 content_json: doc.content_json,
+                content_html: doc.content_html,
                 created_at: doc.created_at.expect("Failed to parse created_at").to_string(),
                 updated_at: doc.updated_at.expect("Failed to parse updated_at").to_string(),
             };
@@ -120,6 +124,7 @@ pub struct DocRequest {
     title: String,
     content_text: String,
     content_json: Value,
+    content_html: String,
 }
 
 #[derive(Serialize)]
@@ -135,6 +140,7 @@ pub struct Doc {
     pub title: String,
     pub content_text: String,
     pub content_json: Value,
+    pub content_html: String,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -145,4 +151,5 @@ pub struct CreateDoc {
     pub title: String,
     pub content_text: String,
     pub content_json: Value,
+    pub content_html: String,
 }

@@ -28,6 +28,7 @@ export default function Page() {
     title: string
     content_json: JSONContent
     content_text: string
+    content_html: string
   } | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -86,6 +87,7 @@ export default function Page() {
                     title: formData.get('title'),
                     content_json: value,
                     content_text: doc?.content_text,
+                    content_html: doc?.content_html,
                   }),
                   headers: {
                     'Content-Type': 'application/json',
@@ -150,7 +152,8 @@ export default function Page() {
                     body: JSON.stringify({
                       title: doc?.title || 'Untitled Document',
                       content_json: editor.getJSON(),
-                      content_text: editor.getHTML(),
+                      content_text: editor.getText(),
+                      content_html: editor.getHTML(),
                     }),
                     headers: {
                       'Content-Type': 'application/json',
