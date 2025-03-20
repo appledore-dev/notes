@@ -220,18 +220,18 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       const json = editor.getJSON()
       onChange?.(json, editor)
 
-      window.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
-          document.querySelectorAll('.tiptap a').forEach((el) => {
-            el.classList.add('hover:cursor-pointer')
-          })
-        }
-        window.addEventListener('keyup', (e: KeyboardEvent) => {
-          document.querySelectorAll('.tiptap a').forEach((el) => {
-            el.classList.remove('hover:cursor-pointer')
-          })
-        })
-      })
+      // window.addEventListener('keydown', (e: KeyboardEvent) => {
+      //   if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
+      //     document.querySelectorAll('.tiptap a').forEach((el) => {
+      //       el.classList.add('hover:cursor-pointer')
+      //     })
+      //   }
+      //   window.addEventListener('keyup', (e: KeyboardEvent) => {
+      //     document.querySelectorAll('.tiptap a').forEach((el) => {
+      //       el.classList.remove('hover:cursor-pointer')
+      //     })
+      //   })
+      // })
     }
   })
 
@@ -241,27 +241,27 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     }
   }, [defaultValue, editor])
 
-  useEffect(() => {
-    const trigger = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
-        document.querySelectorAll('.tiptap a').forEach((el) => {
-          el.classList.add('hover:cursor-pointer')
-        })
-      }
-      window.addEventListener('keyup', (e: KeyboardEvent) => {
-        document.querySelectorAll('.tiptap a').forEach((el) => {
-          el.classList.remove('hover:cursor-pointer')
-        })
-      })
-    }
-    window.addEventListener('keydown', trigger)
-    return () => {
-      window.removeEventListener('keydown', trigger)
-      document.querySelectorAll('.tiptap a').forEach((el) => {
-        el.classList.remove('hover:cursor-pointer')
-      })
-    }
-  }, [])
+  // useEffect(() => {
+  //   const trigger = (e: KeyboardEvent) => {
+  //     if (e.metaKey || e.ctrlKey || e.key?.toLowerCase() === 'meta' || e.key?.toLowerCase() === 'control') {
+  //       document.querySelectorAll('.tiptap a').forEach((el) => {
+  //         el.classList.add('hover:cursor-pointer')
+  //       })
+  //     }
+  //     window.addEventListener('keyup', (e: KeyboardEvent) => {
+  //       document.querySelectorAll('.tiptap a').forEach((el) => {
+  //         el.classList.remove('hover:cursor-pointer')
+  //       })
+  //     })
+  //   }
+  //   window.addEventListener('keydown', trigger)
+  //   return () => {
+  //     window.removeEventListener('keydown', trigger)
+  //     document.querySelectorAll('.tiptap a').forEach((el) => {
+  //       el.classList.remove('hover:cursor-pointer')
+  //     })
+  //   }
+  // }, [])
 
   const [loadingAi, setLoadingAi] = useState<string>()
   const [openPopover, setOpenPopover] = useState<string>()
@@ -403,7 +403,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
                   </div>
                 </div>
                 <div className="flex justify-between items-center gap-4">
-                  {editor.isActive('link') ? <Button size="sm" variant="ghost" className="gap-2" onClick={() => {
+                  {editor.isActive('link') ? <Button size="sm" variant="ghost" className="gap-2" type="button" onClick={() => {
                     editor.chain().focus().unsetLink().run()
                     setOpenPopoverLink(false)
                   }}>
