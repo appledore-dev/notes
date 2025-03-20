@@ -5,6 +5,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -12,17 +25,35 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  useSidebar
 } from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUser } from '@/hooks/use-user'
 import { cn } from '@/lib/utils'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
-import { ChevronDownIcon, CommandIcon, ComputerIcon, LogOutIcon, MoonStarIcon, PlusIcon, SunIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  CommandIcon,
+  ComputerIcon,
+  LogOutIcon,
+  MoonStarIcon,
+  PlusIcon,
+  SearchIcon,
+  SunIcon
+} from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { z } from 'zod'
+
+const SearchSchema = z.object({
+  search: z.string({ required_error: '' }).min(1, 'Search cannot be empty.').trim(),
+})
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const p = usePathname()
@@ -32,10 +63,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     id: string
     title: string
   }[]>([])
-  // const isMobile = useIsMobile()
-  // const r = useRouter()
-  // const [loading, setLoading] = useState(false)
-
   const [data, setData] = useState<{
     navMain: {
       title: string
@@ -43,26 +70,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive?: boolean
     }[]
   }>({
-    navMain: [
-      {
-        title: 'New Document',
-        url: '/',
-      },
-    ],
+    navMain: [],
+  })
+  const searchForm = useForm<z.infer<typeof SearchSchema>>({
+    resolver: zodResolver(SearchSchema),
+    defaultValues: {
+      search: '',
+    },
   })
 
   useEffect(() => {
     setData({
-      navMain: [
-        {
-          title: "New Document",
-          url: "/",
-        },
-        ...docs.map((item) => ({
-          title: item.title,
-          url: `/${item.id}`,
-        })),
-      ].map((item) => ({
+      navMain: docs.map((item) => ({
+        title: item.title,
+        url: `/${item.id}`,
+      })).map((item) => ({
         ...item,
         isActive: item.url === p.split(':')[0],
       })),
@@ -80,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       })
       if (res.ok) {
         const data = await res.json()
-        setDocs(data?.docs || [])
+        setDocs(data?.docs)
       }
     }
   }, [user])
@@ -88,6 +110,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useEffect(() => {
     fetchDocs()
   }, [fetchDocs, p])
+
+  const [openSearch, setOpenSearch] = useState(false)
+  const [searchDocs, setSearchDocs] = useState<{
+    id: string
+    title: string
+    content_text: string
+  }[]>()
+  const { setOpenMobile } = useSidebar()
 
   return (
     <Sidebar variant="floating" {...props}>
@@ -115,11 +145,127 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarMenu className="gap-1">
-            {data.navMain.map((item, i) => (
+            <SidebarMenuItem key="new">
+              <SidebarMenuButton asChild isActive={p === '/'}>
+                <Link href="/" className={cn('flex items-center gap-2 truncate font-medium')}>
+                  <PlusIcon className="!size-3.5" />
+                  <span className="truncate">New Document</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <Dialog open={openSearch} onOpenChange={setOpenSearch} modal>
+              <DialogTrigger asChild>
+                <SidebarMenuItem key="search">
+                  <SidebarMenuButton className="truncate gap-2 hover:cursor-pointer">
+                    <SearchIcon className="!size-3.5" />
+                    <span className="truncate">Search</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </DialogTrigger>
+              <DialogContent className="[&_button.absolute.top-4.right-4]:hidden p-0 max-w-full">
+                <Form {...searchForm}>
+                  <form onSubmit={searchForm.handleSubmit(async (data) => {
+                    setSearchDocs(undefined)
+                    const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs?search=${encodeURIComponent(data.search.split(' ').join(' & '))}`, {
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                      },
+                    })
+                    if (!resp.ok) {
+                      toast('Error', {
+                        description: await resp.text(),
+                      })
+                      return
+                    }
+                    const json = await resp.json()
+                    setSearchDocs(json.docs)
+                  })}>
+                    <DialogHeader className="p-0">
+                      <FormField
+                        control={searchForm.control}
+                        name="search"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                onChange={e => {
+                                  field.onChange(e)
+                                  setSearchDocs(undefined)
+                                }}
+                                autoFocus
+                                placeholder="Search..."
+                                className="w-full !ring-0 border-0 !rounded-b-none outline-0 px-6 py-4 h-full"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <DialogTitle className="hidden"></DialogTitle>
+                    </DialogHeader>
+                  </form>
+                </Form>
+                <ScrollArea>
+                  <div className="!max-h-[calc(100svh-142px)]">
+                    {!searchForm.watch('search') && searchDocs === undefined ? (
+                      <div className="flex flex-col gap-2 w-full px-6">
+                        <p className="text-muted-foreground text-sm">
+                          Search for documents by title or content.
+                        </p>
+                      </div>
+                    ) : <>
+                      {searchDocs?.length ? <div className="grid grid-cols-1 gap-4 px-6">
+                        {searchDocs.map((item) => (
+                          <Link key={item.id} className="flex flex-col gap-1.5 w-full hover:cursor-pointer group" href={`/${item.id}`} onClick={() => {
+                            setOpenSearch(false)
+                            setOpenMobile(false)
+                          }}>
+                            <h4 className="group-hover:underline underline-offset-4 scroll-m-20 text-base font-semibold tracking-tight">
+                              {item.title}
+                            </h4>
+                            <p className="text-muted-foreground line-clamp-2 text-sm" dangerouslySetInnerHTML={{
+                              __html: (() => {
+                                const words = searchForm.watch('search').split(' ')
+                                const regex = new RegExp(`(${words.join('|')})`, 'gi')
+                                if (!item.content_text.toLowerCase().includes(searchForm.watch('search').toLowerCase())) {
+                                  return item.content_text.replace(regex, (match) => `<strong>${match}</strong>`)
+                                }
+                                if (item.content_text.toLowerCase().indexOf(searchForm.watch('search').toLowerCase()) <= 65) {
+                                  return item.content_text.replace(regex, (match) => `<strong>${match}</strong>`)
+                                }
+                                if (item.content_text.toLowerCase().indexOf(searchForm.watch('search').toLowerCase()) > 65) {
+                                  return item.content_text.substring(
+                                    item.content_text.toLowerCase().indexOf(searchForm.watch('search').toLowerCase()) - 65,
+                                  ).replace(regex, (match) => `<strong>${match}</strong>`)
+                                }
+                                return item.content_text.replace(regex, (match) => `<strong>${match}</strong>`)
+                              })(),
+                            }}></p>
+                          </Link>
+                        ))}
+                      </div> : searchDocs ? <div className="flex flex-col gap-2 w-full px-6">
+                        <p className="text-muted-foreground text-sm">
+                          No documents found.
+                        </p>
+                      </div> : <></>}
+                    </>}
+                  </div>
+                </ScrollArea>
+                <DialogFooter className="p-6 pt-0">
+                  <DialogClose asChild>
+                    <Button size="sm" variant="ghost" type="button">
+                      Close
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Separator className="my-0.5" />
+            {data.navMain.map((item) => (
               <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton asChild isActive={item.isActive}>
-                  <Link href={item.url} className={cn('flex items-center gap-2 truncate', i === 0 ? 'font-medium' : '')}>
-                    {i === 0 ? <PlusIcon className="!size-3.5" /> : <></>}
+                <SidebarMenuButton asChild isActive={item.isActive} onClick={() => setOpenMobile(false)}>
+                  <Link href={item.url} className={cn('flex items-center gap-2 truncate')}>
                     <span className="truncate">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>

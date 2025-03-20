@@ -38,7 +38,7 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user
     } else {
         let docs = query!(
             r#"
-            SELECT id, title FROM docs WHERE user_id = $1 AND (content_text @@ to_tsquery($2) OR title @@ to_tsquery($2)) ORDER BY created_at DESC
+            SELECT id, title, content_text FROM docs WHERE user_id = $1 AND (content_text @@ to_tsquery($2) OR title @@ to_tsquery($2)) ORDER BY created_at DESC
             "#,
             Uuid::parse_str(&auth_user.id).unwrap(),
             search
@@ -51,7 +51,7 @@ pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user
             id: doc.id.to_string(),
             title: doc.title,
             user_id: None,
-            content_text: None,
+            content_text: Some(doc.content_text),
             content_json: None,
             content_html: None,
             created_at: None,
