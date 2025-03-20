@@ -1,6 +1,7 @@
 use axum::{
     Json,
     Extension, http::StatusCode,
+    extract::Query,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -9,29 +10,56 @@ use uuid::Uuid;
 
 use crate::auth::CurrentUser;
 
-pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>) -> (StatusCode, Json<DocsResponse>) {
-    let docs = query!(
-        r#"
-        SELECT id, title FROM docs WHERE user_id = $1 ORDER BY created_at DESC
-        "#,
-        Uuid::parse_str(&auth_user.id).unwrap()
-    )
-    .fetch_all(&pool)
-    .await
-    .expect("Failed to fetch docs");
+pub async fn get_handler(Extension(pool): Extension<PgPool>, Extension(auth_user): Extension<CurrentUser>, Query(params): Query<Params>) -> (StatusCode, Json<DocsResponse>) {
+    let search = params.search.unwrap_or_default();
+    if search.is_empty() {
+        let docs = query!(
+            r#"
+            SELECT id, title FROM docs WHERE user_id = $1 ORDER BY created_at DESC
+            "#,
+            Uuid::parse_str(&auth_user.id).unwrap()
+        )
+            .fetch_all(&pool)
+            .await
+            .expect("Failed to fetch docs");
 
-    let docs: Vec<Doc> = docs.into_iter().map(|doc| Doc {
-        id: doc.id.to_string(),
-        title: doc.title,
-        user_id: None,
-        content_text: None,
-        content_json: None,
-        content_html: None,
-        created_at: None,
-        updated_at: None,
-    }).collect();
+        let docs: Vec<Doc> = docs.into_iter().map(|doc| Doc {
+            id: doc.id.to_string(),
+            title: doc.title,
+            user_id: None,
+            content_text: None,
+            content_json: None,
+            content_html: None,
+            created_at: None,
+            updated_at: None,
+        }).collect();
 
-    (StatusCode::OK, Json(DocsResponse { docs, error: None }))
+        (StatusCode::OK, Json(DocsResponse { docs, error: None }))
+    } else {
+        let docs = query!(
+            r#"
+            SELECT id, title FROM docs WHERE user_id = $1 AND (content_text @@ to_tsquery($2) OR title @@ to_tsquery($2)) ORDER BY created_at DESC
+            "#,
+            Uuid::parse_str(&auth_user.id).unwrap(),
+            search
+        )
+            .fetch_all(&pool)
+            .await
+            .expect("Failed to fetch docs");
+
+        let docs: Vec<Doc> = docs.into_iter().map(|doc| Doc {
+            id: doc.id.to_string(),
+            title: doc.title,
+            user_id: None,
+            content_text: None,
+            content_json: None,
+            content_html: None,
+            created_at: None,
+            updated_at: None,
+        }).collect();
+
+        (StatusCode::OK, Json(DocsResponse { docs, error: None }))
+    }
 }
 
 pub async fn post_handler(
@@ -75,6 +103,11 @@ pub async fn post_handler(
     };
 
     (StatusCode::OK, Json(DocResponse { doc: Some(result), error: None }))
+}
+
+#[derive(Deserialize)]
+pub struct Params {
+    pub search: Option<String>,
 }
 
 #[derive(Deserialize)]

@@ -74,7 +74,7 @@ pub async fn handler(Extension(pool): Extension<PgPool>, Json(payload): Json<Otp
 pub fn encode_jwt(email: String) -> Result<String, StatusCode> {
     let secret: String = std::env::var("SECRET").expect("SECRET must be set").as_str().to_string();
     let now = Utc::now();
-    let expire: chrono::TimeDelta = Duration::hours(24);
+    let expire: chrono::TimeDelta = Duration::hours(120);
     let exp: usize = (now + expire).timestamp() as usize;
     let iat: usize = now.timestamp() as usize;
     let claim = Claims { iat, exp, email };
