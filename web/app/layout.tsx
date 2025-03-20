@@ -18,6 +18,22 @@ export const metadata: Metadata = {
   title: 'Notes AI Assistant - Helpedby AI',
   description: 'A simple notes app with AI assistant.',
   authors: { name: 'M Gilang Januar' },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://notes.helpedby.ai',
+    title: 'Notes AI Assistant - Helpedby AI',
+    description: 'A simple notes app with AI assistant.',
+    images: 'https://notes.helpedby.ai/og.png'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@mgilangjanuar',
+    creator: '@mgilangjanuar',
+    title: 'Notes AI Assistant - Helpedby AI',
+    description: 'A simple notes app with AI assistant.',
+    images: 'https://notes.helpedby.ai/x.png'
+  }
 }
 
 export default function RootLayout({
