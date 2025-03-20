@@ -439,7 +439,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     <BubbleMenu
       editor={editor}
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
-      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-30', editor?.isEditable ? '' : 'hidden')}
+      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50', editor?.isEditable ? '' : 'hidden')}
     >
       <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
         {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
@@ -551,7 +551,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       const { from, to } = state.selection
       const text = state.doc.textBetween(from - 1, to)
       return text.endsWith('/') && state.selection.empty
-    }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-30 min-w-56', editor?.isEditable ? '' : 'hidden')}>
+    }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-50 min-w-56', editor?.isEditable ? '' : 'hidden')}>
       <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
         const selection = getSelectionText()
         const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
