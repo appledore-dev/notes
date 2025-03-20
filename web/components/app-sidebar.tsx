@@ -134,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     AI Text Editor
                   </span>
                   <span className="text-muted-foreground text-xs">
-                    by @mgilangjanuar
+                    Helpedby AI
                   </span>
                 </div>
               </Link>

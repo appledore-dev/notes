@@ -159,7 +159,7 @@ export default function Page() {
                       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
                     },
                   })
-                  await new Promise(resolve => setTimeout(resolve, 1000))
+                  await new Promise(resolve => setTimeout(resolve, 200))
                   setLoading(false)
                   if (res.ok) {
                     const data = await res.json()
