@@ -1,6 +1,6 @@
 # AI Text Editor
 
-[[Live Demo](https://ai-text-editor-mgilangjanuar.helpedby.ai/)]
+[[Live Demo](https://notes.helpedby.ai/)]
 
 A simple AI text editor that allows users to edit and improve their text using AI. The application is built with Rust for the backend and Next.js for the frontend.
 
