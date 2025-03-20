@@ -15,8 +15,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'AI Text Editor',
-  description: 'No description',
+  title: 'Notes AI Assistant - Helpedby AI',
+  description: 'A simple notes app with AI assistant.',
   authors: { name: 'M Gilang Januar' },
 }
 

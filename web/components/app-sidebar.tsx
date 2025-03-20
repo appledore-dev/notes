@@ -124,20 +124,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <CommandIcon className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">
-                    AI Text Editor
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    Helpedby AI
-                  </span>
-                </div>
-              </Link>
+            <SidebarMenuButton size="lg">
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <CommandIcon className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-medium">
+                  Notes AI Assistant
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  by <a href="https://x.com/mgilangjanuar" target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4">mgilangjanuar</a>
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -383,7 +381,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Link href="https://github.com/hatchways-community/senior-full-stack-engineer-ai-work-sample-a8f597bb35ef46998c617b1f2bfc4981" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary">
+            <Link href="https://github.com/appledore-dev/notes" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary">
               <GitHubLogoIcon className="!size-3.5" />
             </Link>
           </div>
