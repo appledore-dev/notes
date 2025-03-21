@@ -57,7 +57,7 @@ A simple AI text editor that allows users to edit and improve their text using A
 1. Clone the repository
 
     ```bash
-    git clone git@github.com:hatchways-community/senior-full-stack-engineer-ai-work-sample-a8f597bb35ef46998c617b1f2bfc4981.git
+    git clone git@github.com:appledore-dev/notes.git
     ```
 
 2. Create and migrate the database
