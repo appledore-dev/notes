@@ -38,6 +38,6 @@ async fn main() {
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:4002").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:4012").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
