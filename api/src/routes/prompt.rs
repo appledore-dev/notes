@@ -40,7 +40,7 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
     };
 
     let client = reqwest::Client::new();
-    let resp = client.post(format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key={}", api_key))
+    let resp = client.post(format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={}", api_key))
         .body(to_string(&body).unwrap())
         .header("Content-Type", "application/json")
         .send()
