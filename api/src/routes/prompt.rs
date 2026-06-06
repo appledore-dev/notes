@@ -12,53 +12,62 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
     let api_key = std::env::var("ROUTER_AI_API_KEY").expect("ROUTER_AI_API_KEY must be set");
     let body = AIRequest {
         model: default_model(),
-        contents: vec![
-            AIContent {
+        messages: vec![
+            AIMessage {
+                role: "system".to_string(),
+                content: format!(concat!(
+                    "You are a helpful writing assistant. Please help the user to replace the selected text.\n\n",
+                    "Your task is: {}\n\n",
+                    "Make sure to provide only exact 1 option as a response."
+                ), prompt),
+            },
+            AIMessage {
                 role: "user".to_string(),
-                parts: vec![
-                    AIPart {
-                        text: format!("The selected text is: {}", context),
-                    },
-                ],
+                content: format!("The selected text is: {}", context),
             },
         ],
-        system_instruction: AIContent {
-            role: "user".to_string(),
-            parts: vec![
-                AIPart {
-                    text: format!(concat!(
-                        "You are a helpful writing assistant. Please help the user to replace the selected text.\n\n",
-                        "Your task is: {}\n\n",
-                        "Make sure to provide only exact 1 option as a response."
-                    ), prompt),
-                },
-            ],
-        },
-        generation_config: AIGenerationConfig {
-            temperature: 0.7,
-            max_output_tokens: 8192,
-            top_p: 0.95,
-            top_k: 40,
-            response_mime_type: "text/plain".to_string(),
+        stream: false,
+        reasoning: AIReasoning {
+            effort: "none".to_string(),
         },
     };
 
     let client = reqwest::Client::new();
     let resp = client.post("https://router.helpedby.ai/v1/chat/completions")
-        .body(to_string(&body).unwrap())
-        .header("Content-Type", "application/json")
+        .json(&body)
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await;
     match resp {
         Ok(resp) => {
-            if resp.status() != StatusCode::OK {
-                let err = resp.json::<AIResponseError>().await.unwrap();
-                return (StatusCode::BAD_REQUEST, Json(PromptResponse::Error { error: err.error.message }));
+            let status = resp.status();
+            let text = resp.text().await.unwrap_or_default();
+
+            if !status.is_success() {
+                if let Ok(err) = serde_json::from_str::<AIResponseError>(&text) {
+                    return (StatusCode::BAD_REQUEST, Json(PromptResponse::Error { error: err.error.message }));
+                }
+
+                return (StatusCode::BAD_REQUEST, Json(PromptResponse::Error { error: text }));
             }
-            let json = resp.json::<AIResponse>().await.unwrap();
-            let result = &json.candidates[0].content.parts[0].text;
-            (StatusCode::OK, Json(PromptResponse::Result { result: result.to_string() }))
+
+            match serde_json::from_str::<AIResponse>(&text) {
+                Ok(json) => {
+                    let result = json
+                        .choices
+                        .first()
+                        .and_then(|choice| choice.message.content.as_deref())
+                        .unwrap_or_default();
+
+                    (StatusCode::OK, Json(PromptResponse::Result { result: result.to_string() }))
+                }
+                Err(err) => (
+                    StatusCode::BAD_REQUEST,
+                    Json(PromptResponse::Error {
+                        error: format!("Failed to decode AI response: {}", err),
+                    }),
+                ),
+            }
         }
         Err(err) => {
             return (StatusCode::INTERNAL_SERVER_ERROR, Json(PromptResponse::Error { error: err.to_string() }));
@@ -83,9 +92,9 @@ pub enum PromptResponse {
 #[serde(rename_all = "camelCase")]
 struct AIRequest {
     model: String,
-    contents: Vec<AIContent>,
-    system_instruction: AIContent,
-    generation_config: AIGenerationConfig,
+    messages: Vec<AIMessage>,
+    stream: bool,
+    reasoning: AIReasoning,
 }
 
 fn default_model() -> String {
@@ -93,50 +102,31 @@ fn default_model() -> String {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct AIContent {
+struct AIMessage {
     role: String,
-    parts: Vec<AIPart>,
+    content: String,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct AIPart {
-    text: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct AIGenerationConfig {
-    temperature: f32,
-    max_output_tokens: i32,
-    top_p: f32,
-    top_k: i32,
-    response_mime_type: String,
+struct AIReasoning {
+    effort: String,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct AIResponse {
-    candidates: Vec<AICandidate>,
+    choices: Vec<AIChoice>,
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AICandidate {
-    content: AIContentCandidate,
+struct AIChoice {
+    message: AIResponseMessage,
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AIContentCandidate {
-    parts: Vec<AIPartCandidate>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AIPartCandidate {
-    text: String,
+struct AIResponseMessage {
+    content: Option<String>,
 }
 
 #[derive(Deserialize)]
