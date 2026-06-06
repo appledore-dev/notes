@@ -145,11 +145,3 @@ pub struct Doc {
     pub updated_at: String,
 }
 
-#[derive(Serialize)]
-pub struct CreateDoc {
-    pub user_id: String,
-    pub title: String,
-    pub content_text: String,
-    pub content_json: Value,
-    pub content_html: String,
-}

@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -58,7 +59,7 @@ import {
   TextQuoteIcon,
   UnderlineIcon
 } from 'lucide-react'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 const lowlight = createLowlight(all)
@@ -264,7 +265,183 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   // }, [])
 
   const [loadingAi, setLoadingAi] = useState<string>()
-  const [openPopover, setOpenPopover] = useState<string>()
+  const [openPopover, _setOpenPopover] = useState<string>()
+  const [selectedLanguageIndex, setSelectedLanguageIndex] = useState<number>(0)
+  const [selectedToneIndex, setSelectedToneIndex] = useState<number>(0)
+  const [selectedMainIndex, setSelectedMainIndex] = useState<number>(0)
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false)
+
+  const popoverOpenRef = useRef(false)
+  const setOpenPopover = (val: string | undefined) => {
+    popoverOpenRef.current = !!val
+    _setOpenPopover(val)
+  }
+
+  const bubbleMenuRef = useRef<HTMLDivElement>(null)
+  const floatingMenuRef = useRef<HTMLDivElement>(null)
+  const toneContentRef = useRef<HTMLDivElement>(null)
+  const translateContentRef = useRef<HTMLDivElement>(null)
+
+  const TONES = [
+    'Authoritative',
+    'Conversational',
+    'Cynical',
+    'Emotional',
+    'Encouraging',
+    'Formal',
+    'Friendly',
+    'Humorous',
+    'Informal',
+    'Inspiring',
+    'Neutral',
+    'Nostalgic',
+    'Optimistic',
+    'Persuasive',
+    'Pessimistic',
+    'Reflective',
+    'Sarcastic',
+    'Urgent',
+  ]
+
+  const MAIN_ITEMS = [
+    { key: 'simplify', label: 'Simplify', prompt: 'simplify' },
+    { key: 'fix', label: 'Fix spelling & grammar', prompt: 'fix spelling and grammar' },
+    { key: 'tone', label: 'Rephrase with tone...', hasSubmenu: true },
+    { key: 'translate', label: 'Translate to...', hasSubmenu: true },
+    { key: 'shorter', label: 'Make it shorter', prompt: 'make it shorter' },
+    { key: 'longer', label: 'Make it longer', prompt: 'make it longer' },
+    { key: 'emojify', label: 'Emojify', prompt: 'emojify' },
+  ]
+
+  const menuHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null)
+
+  const openToneMenu = () => {
+    setOpenPopover('tone')
+    setSelectedToneIndex(0)
+  }
+
+  const openTranslateMenu = () => {
+    if (isMobile) {
+      setOpenDrawer(true)
+      return
+    }
+
+    setOpenPopover('translate')
+    setSelectedLanguageIndex(0)
+  }
+
+  menuHandlerRef.current = (e: KeyboardEvent) => {
+    if (e.shiftKey && e.key.startsWith('Arrow')) return
+
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) return
+
+    const { from, to } = editor!.state.selection
+    const isBubbleMenuVisible = popoverOpenRef.current || (editor!.isFocused && from !== to)
+    const textBefore = editor!.state.doc.textBetween(from - 1, to)
+    const isFloatingMenuVisible = editor!.isFocused && textBefore.endsWith('/') && editor!.state.selection.empty
+
+    if (!isBubbleMenuVisible && !isFloatingMenuVisible) return
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (openPopover === 'tone') {
+      if (e.key === 'ArrowDown') {
+        setSelectedToneIndex(prev => prev < TONES.length - 1 ? prev + 1 : prev)
+      } else if (e.key === 'ArrowUp') {
+        setSelectedToneIndex(prev => prev > 0 ? prev - 1 : prev)
+      } else if (e.key === 'Enter') {
+        runAi(`rephrase with ${TONES[selectedToneIndex].toLowerCase()} tone`)
+      } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+        setOpenPopover(undefined)
+      }
+      return
+    }
+
+    if (openPopover === 'translate') {
+      if (e.key === 'ArrowDown') {
+        setSelectedLanguageIndex(prev => prev < LANGUAGES.length - 1 ? prev + 1 : prev)
+      } else if (e.key === 'ArrowUp') {
+        setSelectedLanguageIndex(prev => prev > 0 ? prev - 1 : prev)
+      } else if (e.key === 'Enter') {
+        runAi(`translate to ${LANGUAGES[selectedLanguageIndex].name}`)
+      } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+        setOpenPopover(undefined)
+      }
+      return
+    }
+
+    if (isFloatingMenuVisible) {
+      if (e.key === 'Enter') {
+        const selection = getSelectionText()
+        const context = editor!.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
+        if (!context) {
+          toast('Error', {
+            description: 'Please write something before using this feature.',
+          })
+          return
+        }
+        runAi('continue from the selected text!', context)
+      }
+      return
+    }
+
+    if (e.key === 'ArrowDown') {
+      setSelectedMainIndex(prev => prev < MAIN_ITEMS.length - 1 ? prev + 1 : 0)
+    } else if (e.key === 'ArrowUp') {
+      setSelectedMainIndex(prev => prev > 0 ? prev - 1 : MAIN_ITEMS.length - 1)
+    } else if (e.key === 'Enter') {
+      const item = MAIN_ITEMS[selectedMainIndex]
+      if (item.key === 'tone') {
+        openToneMenu()
+      } else if (item.key === 'translate') {
+        openTranslateMenu()
+      } else if (item.prompt) {
+        runAi(item.prompt)
+      }
+    } else if (e.key === 'ArrowRight') {
+      const item = MAIN_ITEMS[selectedMainIndex]
+      if (item.key === 'tone') {
+        openToneMenu()
+      } else if (item.key === 'translate') {
+        openTranslateMenu()
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!editor) return
+
+    const handler = (e: KeyboardEvent) => {
+      menuHandlerRef.current?.(e)
+    }
+    document.addEventListener('keydown', handler, { capture: true })
+    return () => document.removeEventListener('keydown', handler, { capture: true })
+  }, [editor])
+
+  useEffect(() => {
+    if (!openPopover && bubbleMenuRef.current && !bubbleMenuRef.current.closest('.hidden')) {
+      bubbleMenuRef.current.focus()
+    }
+  }, [openPopover])
+
+  useEffect(() => {
+    if (!bubbleMenuRef.current) return
+    const selected = bubbleMenuRef.current.querySelector<HTMLElement>(`[data-main-index="${selectedMainIndex}"]`)
+    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedMainIndex])
+
+  useEffect(() => {
+    if (!toneContentRef.current) return
+    const selected = toneContentRef.current.children[selectedToneIndex] as HTMLElement
+    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedToneIndex])
+
+  useEffect(() => {
+    if (!translateContentRef.current) return
+    const selected = translateContentRef.current.children[selectedLanguageIndex] as HTMLElement
+    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedLanguageIndex])
   const getSelectionText = () => {
     if (!editor) return null
     const { view, state } = editor
@@ -440,133 +617,194 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     <BubbleMenu
       editor={editor}
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
+      shouldShow={({ editor, from, to }) => {
+        if (popoverOpenRef.current) return true
+        return editor.isFocused && from !== to
+      }}
       className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50', editor?.isEditable ? '' : 'hidden')}
     >
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
-        {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
-        Simplify
-      </Button>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('fix spelling and grammar')} disabled={!!loadingAi}>
-        {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
-        Fix spelling & grammar
-      </Button>
-      <Popover open={openPopover === 'tone'} onOpenChange={o => setOpenPopover(o ? 'tone' : undefined)}>
-        <PopoverTrigger asChild>
-          <Button size="sm" className="gap-6 font-normal w-full justify-between" variant="ghost" disabled={!!loadingAi}>
-            <div className="flex items-center gap-2">
-              {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
-              <span>Rephrase with tone...</span>
-            </div>
-            <ChevronRightIcon className="!size-3.5" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={isMobile ? 8 : 12} alignOffset={isMobile ? -6 : 0}>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with authoritative tone')} disabled={!!loadingAi}>
-            Authoritative
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with conversational tone')} disabled={!!loadingAi}>
-            Conversational
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with cynical tone')} disabled={!!loadingAi}>
-            Cynical
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with emotional tone')} disabled={!!loadingAi}>
-            Emotional
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with encouraging tone')} disabled={!!loadingAi}>
-            Encouraging
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with formal tone')} disabled={!!loadingAi}>
-            Formal
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with friendly tone')} disabled={!!loadingAi}>
-            Friendly
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with humorous tone')} disabled={!!loadingAi}>
-            Humorous
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with informal tone')} disabled={!!loadingAi}>
-            Informal
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with inspiring tone')} disabled={!!loadingAi}>
-            Inspiring
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with neutral tone')} disabled={!!loadingAi}>
-            Neutral
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with nostalgic tone')} disabled={!!loadingAi}>
-            Nostalgic
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with optimistic tone')} disabled={!!loadingAi}>
-            Optimistic
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with persuasive tone')} disabled={!!loadingAi}>
-            Persuasive
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with pessimistic tone')} disabled={!!loadingAi}>
-            Pessimistic
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with reflective tone')} disabled={!!loadingAi}>
-            Reflective
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with sarcastic tone')} disabled={!!loadingAi}>
-            Sarcastic
-          </Button>
-          <Button size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi('rephrase with urgent tone')} disabled={!!loadingAi}>
-            Urgent
-          </Button>
-        </PopoverContent>
-      </Popover>
-      <Popover open={openPopover === 'translate'} onOpenChange={o => setOpenPopover(o ? 'translate' : undefined)}>
-        <PopoverTrigger asChild>
-          <Button size="sm" className="gap-6 font-normal w-full justify-between" variant="ghost" disabled={!!loadingAi}>
-            <div className="flex gap-2 items-center">
-              {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
-              <span>Translate to...</span>
-            </div>
-            <ChevronRightIcon className="!size-3.5" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent side={isMobile ? 'bottom' : 'right'} align="start" className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40" sideOffset={isMobile ? 8 : 12} alignOffset={isMobile ? -6 : 0}>
-          {LANGUAGES.map((lang) => (
-            <Button key={lang.code} size="sm" className="font-normal w-full justify-start" variant="ghost" onClick={() => runAi(`translate to ${lang.name}`)} disabled={!!loadingAi}>
-              {lang.name}
+      <div ref={bubbleMenuRef} tabIndex={-1} className="contents">
+        <Button size="sm" data-main-index="0" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 0 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
+          {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
+          Simplify
+        </Button>
+        <Button size="sm" data-main-index="1" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 1 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('fix spelling and grammar')} disabled={!!loadingAi}>
+          {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
+          Fix spelling & grammar
+        </Button>
+        <Popover open={openPopover === 'tone'} onOpenChange={o => {
+          setOpenPopover(o ? 'tone' : undefined)
+          setSelectedToneIndex(0)
+        }}>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              data-main-index="2"
+              className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')}
+              variant="ghost"
+              disabled={!!loadingAi}
+              onKeyDownCapture={(event) => {
+                if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+
+                event.preventDefault()
+                event.stopPropagation()
+                openToneMenu()
+              }}
+            >
+              <div className="flex items-center gap-2">
+                {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+                <span>Rephrase with tone...</span>
+              </div>
+              <ChevronRightIcon className="!size-3.5" />
             </Button>
-          ))}
-        </PopoverContent>
-      </Popover>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('make it shorter')} disabled={!!loadingAi}>
-        {loadingAi === 'make it shorter' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListMinusIcon className="!size-3.5" />}
-        Make it shorter
-      </Button>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('make it longer')} disabled={!!loadingAi}>
-        {loadingAi === 'make it longer' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListPlusIcon className="!size-3.5" />}
-        Make it longer
-      </Button>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => runAi('emojify')} disabled={!!loadingAi}>
-        {loadingAi === 'emojify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SmilePlusIcon className="!size-3.5" />}
-        Emojify
-      </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="right"
+            align="start"
+            className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
+            sideOffset={12}
+            alignOffset={0}
+            ref={toneContentRef}
+          >
+            {TONES.map((tone, index) => (
+              <Button
+                key={tone}
+                size="sm"
+                className={cn('font-normal w-full justify-start', {
+                  'bg-accent text-accent-foreground': index === selectedToneIndex,
+                })}
+                variant="ghost"
+                onClick={() => runAi(`rephrase with ${tone.toLowerCase()} tone`)}
+                disabled={!!loadingAi}
+              >
+                {tone}
+              </Button>
+            ))}
+          </PopoverContent>
+        </Popover>
+        {isMobile ? (
+          <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
+            <DrawerTrigger asChild>
+              <Button size="sm" data-main-index="3" className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" disabled={!!loadingAi}>
+                <div className="flex gap-2 items-center">
+                  {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
+                  <span>Translate to...</span>
+                </div>
+                <ChevronRightIcon className="!size-3.5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="flex flex-col gap-0">
+              <DrawerHeader>
+                <DrawerTitle>Translate to</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex-1 overflow-y-auto no-scrollbar px-4">
+                <div className="grid grid-cols-2 gap-2 pb-4">
+                  {LANGUAGES.map((lang) => (
+                    <Button
+                      key={lang.code}
+                      size="sm"
+                      className="font-normal justify-start text-sm"
+                      variant="outline"
+                      onClick={() => {
+                        runAi(`translate to ${lang.name}`)
+                        setOpenDrawer(false)
+                      }}
+                      disabled={!!loadingAi}
+                    >
+                      {lang.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Popover open={openPopover === 'translate'} onOpenChange={o => {
+            setOpenPopover(o ? 'translate' : undefined)
+            setSelectedLanguageIndex(0)
+          }}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                data-main-index="3"
+                className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && !openPopover && 'bg-accent text-accent-foreground')}
+                variant="ghost"
+                disabled={!!loadingAi}
+                onKeyDownCapture={(event) => {
+                  if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+
+                  event.preventDefault()
+                  event.stopPropagation()
+                  openTranslateMenu()
+                }}
+              >
+                <div className="flex gap-2 items-center">
+                  {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
+                  <span>Translate to...</span>
+                </div>
+                <ChevronRightIcon className="!size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="right"
+              align="start"
+              className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
+              sideOffset={12}
+              alignOffset={0}
+              ref={translateContentRef}
+            >
+              {LANGUAGES.map((lang, index) => (
+                <Button
+                  key={lang.code}
+                  size="sm"
+                  className={cn('font-normal w-full justify-start', {
+                    'bg-accent text-accent-foreground': index === selectedLanguageIndex,
+                  })}
+                  variant="ghost"
+                  onClick={() => runAi(`translate to ${lang.name}`)}
+                  disabled={!!loadingAi}
+                >
+                  {lang.name}
+                </Button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        )}
+        <Button size="sm" data-main-index="4" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 4 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it shorter')} disabled={!!loadingAi}>
+          {loadingAi === 'make it shorter' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListMinusIcon className="!size-3.5" />}
+          Make it shorter
+        </Button>
+        <Button size="sm" data-main-index="5" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 5 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it longer')} disabled={!!loadingAi}>
+          {loadingAi === 'make it longer' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListPlusIcon className="!size-3.5" />}
+          Make it longer
+        </Button>
+        <Button size="sm" data-main-index="6" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 6 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('emojify')} disabled={!!loadingAi}>
+          {loadingAi === 'emojify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SmilePlusIcon className="!size-3.5" />}
+          Emojify
+        </Button>
+      </div>
     </BubbleMenu>
     <FloatingMenu editor={editor} tippyOptions={{ placement: 'bottom-start', zIndex: 50 }} shouldShow={({ state }) => {
       const { from, to } = state.selection
       const text = state.doc.textBetween(from - 1, to)
       return text.endsWith('/') && state.selection.empty
     }} className={cn('flex flex-col gap-1 max-h-80 overflow-y-auto no-scrollbar item-center flex-nowrap p-1 rounded-md border w-full bg-background z-50 min-w-56', editor?.isEditable ? '' : 'hidden')}>
-      <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
-        const selection = getSelectionText()
-        const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
-        if (!context) {
-          toast('Error', {
-            description: 'Please write something before using this feature.',
-          })
-          return
-        }
-        runAi('continue from the selected text!', context)
-      }} disabled={!!loadingAi}>
-        {loadingAi === 'continue from the selected text!' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
-        Continue
-      </Button>
+      <div ref={floatingMenuRef} tabIndex={-1} className="contents">
+        <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
+          const selection = getSelectionText()
+          const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
+          if (!context) {
+            toast('Error', {
+              description: 'Please write something before using this feature.',
+            })
+            return
+          }
+          runAi('continue from the selected text!', context)
+        }} disabled={!!loadingAi}>
+          {loadingAi === 'continue from the selected text!' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SparklesIcon className="!size-3.5" />}
+          Continue
+        </Button>
+      </div>
     </FloatingMenu>
   </div> : <></>
 }
