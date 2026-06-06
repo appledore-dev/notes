@@ -156,7 +156,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave, o
   const editor = useEditor({
     editorProps: {
       attributes: {
-        class: cn('py-4 !h-[calc(100svh-2rem-36px-58px)] overflow-y-auto no-scrollbar focus:outline-none'),
+        class: cn('pb-4 !h-[calc(100svh-2rem-36px)] overflow-y-auto no-scrollbar focus:outline-none'),
       },
     },
     onCreate({ editor }) {
@@ -546,127 +546,6 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave, o
   }, [insertImageAsBase64])
 
   return editor ? <div className="relative space-y-2.5 flex flex-col w-full justify-start max-w-prose mx-auto">
-    <div className="flex items-center gap-4 justify-between w-full">
-      <div className="flex gap-1.5 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5">
-        <Select
-          defaultValue="p"
-          value={editor.isActive('heading') ? editor.getAttributes('heading').level.toString() : 'p'}
-          onValueChange={(v) => {
-            if (v === 'p') {
-              editor.chain().focus().setParagraph().run()
-            } else {
-              editor.chain().focus().setHeading({
-                level: Number(v) as 1 | 2 | 3
-              }).run()
-            }
-          }}
-        >
-          <SelectTrigger className="w-[120px] !h-8">
-            <SelectValue placeholder="Theme" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1" className="text-2xl font-bold">Heading 1</SelectItem>
-            <SelectItem value="2" className="text-xl font-semibold">Heading 2</SelectItem>
-            <SelectItem value="3" className="text-lg font-semibold">Heading 3</SelectItem>
-            <SelectItem value="p" className="text-base">Paragraph</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button size="sm" variant={editor.isActive('bold') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleBold().run()
-        }}>
-          <BoldIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('italic') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleItalic().run()
-        }}>
-          <ItalicIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('underline') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleUnderline().run()
-        }}>
-          <UnderlineIcon className="!size-3.5" />
-        </Button>
-        <Separator orientation="vertical" className="!h-8 mx-0" />
-        <Button size="sm" variant={editor.isActive('strike') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleStrike().run()
-        }}>
-          <StrikethroughIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('highlight') && editor.getAttributes('highlight').color !== 'black' ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleHighlight().run()
-        }}>
-          <HighlighterIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('blockquote') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleBlockquote().run()
-        }}>
-          <TextQuoteIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('codeBlock') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleCodeBlock().run()
-        }}>
-          <CodeIcon className="!size-3.5" />
-        </Button>
-        <Popover open={openPopoverLink} onOpenChange={setOpenPopoverLink}>
-          <PopoverTrigger asChild>
-            <Button size="sm" variant={editor.isActive('link') ? 'default' : 'outline'} className="p-0 size-8">
-              <Link2Icon className="!size-3.5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="gap-2 grid grid-cols-1">
-              <form className="grid gap-4" onSubmit={e => {
-                e.preventDefault()
-                const data = Object.fromEntries(new FormData(e.currentTarget).entries())
-                if (!data.link) {
-                  editor.chain().focus().unsetLink().run()
-                  return
-                }
-                editor.chain().focus().extendMarkRange('link').setLink({ href: data.link as string }).run()
-                setOpenPopoverLink(false)
-              }}>
-                <div className="grid gap-2">
-                  <div className="grid grid-cols-1 items-center gap-2">
-                    <Label htmlFor="tiptap-extension-link-url">URL</Label>
-                    <Input
-                      id="tiptap-extension-link-url"
-                      defaultValue={editor.getAttributes('link').href}
-                      className="h-8"
-                      name="link"
-                      placeholder="https://example.com"
-                      type="url"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-between items-center gap-4">
-                  {editor.isActive('link') ? <Button size="sm" variant="ghost" className="gap-2" type="button" onClick={() => {
-                    editor.chain().focus().unsetLink().run()
-                    setOpenPopoverLink(false)
-                  }}>
-                    <Link2OffIcon className="!size-3.5" />
-                    Unlink
-                  </Button> : <span></span>}
-                  <Button size="sm" variant="outline" type="submit">
-                    {editor.isActive('link') ? 'Update' : 'Add'} Link
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <Separator orientation="vertical" className="!h-8 mx-0" />
-        <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleOrderedList().run()
-        }}>
-          <ListOrderedIcon className="!size-3.5" />
-        </Button>
-        <Button size="sm" variant={editor.isActive('bulletList') ? 'default' : 'outline'} className="p-0 size-8" onClick={() => {
-          editor.chain().focus().toggleBulletList().run()
-        }}>
-          <ListIcon className="!size-3.5" />
-        </Button>
-      </div>
-    </div>
     <EditorContent
       editor={editor}
       className="pb-4"
@@ -750,7 +629,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave, o
         if (!isMobile && desktopMenuPage !== 'main') return true
         return editor.isFocused && from !== to
       }}
-      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50 w-56', editor?.isEditable ? '' : 'hidden')}
+      className={cn('relative flex flex-col gap-0.5 max-h-[32rem] overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50 w-64', editor?.isEditable ? '' : 'hidden')}
     >
       <div ref={bubbleMenuRef} tabIndex={-1} className="contents">
         {!isMobile && desktopMenuPage === 'tone' ? (
@@ -807,6 +686,117 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave, o
           </>
         ) : (
           <>
+            {/* ── Format section ── */}
+            <p className="px-2 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground select-none">
+              Format
+            </p>
+            {/* Heading/paragraph select row */}
+            <div className="px-1 w-full">
+              <Select
+                value={editor.isActive('heading') ? editor.getAttributes('heading').level.toString() : 'p'}
+                onValueChange={(v) => {
+                  if (v === 'p') {
+                    editor.chain().focus().setParagraph().run()
+                  } else {
+                    editor.chain().focus().setHeading({ level: Number(v) as 1 | 2 | 3 }).run()
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full !h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1" className="text-base font-bold">Heading 1</SelectItem>
+                  <SelectItem value="2" className="text-sm font-semibold">Heading 2</SelectItem>
+                  <SelectItem value="3" className="text-sm font-medium">Heading 3</SelectItem>
+                  <SelectItem value="p" className="text-sm">Paragraph</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Inline formatting buttons */}
+            <div className="px-1 py-0.5 flex flex-wrap gap-1">
+              <Button size="sm" variant={editor.isActive('bold') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleBold().run()}>
+                <BoldIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('italic') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleItalic().run()}>
+                <ItalicIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('underline') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleUnderline().run()}>
+                <UnderlineIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('strike') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleStrike().run()}>
+                <StrikethroughIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('highlight') && editor.getAttributes('highlight').color !== 'black' ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleHighlight().run()}>
+                <HighlighterIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('blockquote') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+                <TextQuoteIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('codeBlock') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
+                <CodeIcon className="!size-3" />
+              </Button>
+              <Popover open={openPopoverLink} onOpenChange={setOpenPopoverLink}>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant={editor.isActive('link') ? 'default' : 'ghost'} className="p-0 size-7">
+                    <Link2Icon className="!size-3" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60" align="start">
+                  <div className="gap-2 grid grid-cols-1">
+                    <form className="grid gap-4" onSubmit={e => {
+                      e.preventDefault()
+                      const data = Object.fromEntries(new FormData(e.currentTarget).entries())
+                      if (!data.link) {
+                        editor.chain().focus().unsetLink().run()
+                        return
+                      }
+                      editor.chain().focus().extendMarkRange('link').setLink({ href: data.link as string }).run()
+                      setOpenPopoverLink(false)
+                    }}>
+                      <div className="grid gap-2">
+                        <div className="grid grid-cols-1 items-center gap-2">
+                          <Label htmlFor="tiptap-extension-link-url">URL</Label>
+                          <Input
+                            id="tiptap-extension-link-url"
+                            defaultValue={editor.getAttributes('link').href}
+                            className="h-8"
+                            name="link"
+                            placeholder="https://example.com"
+                            type="url"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center gap-4">
+                        {editor.isActive('link') ? <Button size="sm" variant="ghost" className="gap-2 !text-destructive" type="button" onClick={() => {
+                          editor.chain().focus().unsetLink().run()
+                          setOpenPopoverLink(false)
+                        }}>
+                          <Link2OffIcon className="!size-3.5" />
+                          Unlink
+                        </Button> : <span></span>}
+                        <Button size="sm" variant="outline" type="submit">
+                          {editor.isActive('link') ? 'Update' : 'Add'} Link
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Button size="sm" variant={editor.isActive('orderedList') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+                <ListOrderedIcon className="!size-3" />
+              </Button>
+              <Button size="sm" variant={editor.isActive('bulletList') ? 'default' : 'ghost'} className="p-0 size-7" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+                <ListIcon className="!size-3" />
+              </Button>
+            </div>
+
+            <Separator className="my-0.5" />
+
+            {/* ── AI section ── */}
+            <p className="px-2 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground select-none">
+              AI
+            </p>
             <Button size="sm" data-main-index="0" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 0 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
               {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
               Simplify
