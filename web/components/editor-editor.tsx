@@ -743,6 +743,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       editor={editor}
       tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
       shouldShow={({ editor, from, to }) => {
+        if (editor.isActive('image')) return false
         if (!isMobile && desktopMenuPage !== 'main') return true
         return editor.isFocused && from !== to
       }}

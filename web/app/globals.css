@@ -256,4 +256,12 @@
     height: 0;
     pointer-events: none;
   }
+
+  img.ProseMirror-selectednode {
+    filter: grayscale(1);
+    outline: 2px dashed var(--color-muted-foreground);
+    outline-offset: 3px;
+    border-radius: 8px;
+    transform: scale(0.98);
+  }
 }
