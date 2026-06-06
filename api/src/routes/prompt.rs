@@ -3,7 +3,6 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::to_string;
 
 pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptResponse>) {
     let prompt = payload.prompt;
