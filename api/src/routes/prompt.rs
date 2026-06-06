@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptResponse>) {
     let prompt = payload.prompt;
-    let context = payload.context;
+    let context = payload.context.unwrap_or_default();
 
     let api_key = std::env::var("ROUTER_AI_API_KEY").expect("ROUTER_AI_API_KEY must be set");
     let body = AIRequest {
@@ -76,7 +76,7 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
 
 #[derive(Deserialize)]
 pub struct PromptRequest {
-    context: String,
+    context: Option<String>,
     prompt: String,
 }
 

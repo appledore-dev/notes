@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { LANGUAGES } from '@/lib/constant'
 import { cn } from '@/lib/utils'
 import { ReloadIcon } from '@radix-ui/react-icons'
+import Image from '@tiptap/extension-image'
 import { Extension, getAttributes } from '@tiptap/core'
 import Blockquote from '@tiptap/extension-blockquote'
 import BulletList from '@tiptap/extension-bullet-list'
@@ -60,7 +61,7 @@ import {
   TextQuoteIcon,
   UnderlineIcon
 } from 'lucide-react'
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 type BubbleMenuPage = 'main' | 'tone' | 'translate'
@@ -154,7 +155,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   const editor = useEditor({
     editorProps: {
       attributes: {
-        class: cn('p-4 !h-[calc(100svh-2rem-36px-58px)] overflow-y-auto no-scrollbar focus:outline-none border rounded-md border-dashed border-muted-foreground/40'),
+        class: cn('py-4 !h-[calc(100svh-2rem-36px-58px)] overflow-y-auto no-scrollbar focus:outline-none'),
       },
     },
     extensions: [
@@ -218,7 +219,14 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       CodeBlockLowlight.configure({
         lowlight,
       }),
-      OnBlurHighlight
+      OnBlurHighlight,
+      Image.configure({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'max-w-full rounded-md my-2',
+        },
+      }),
     ],
     onUpdate({ editor }) {
       const json = editor.getJSON()
@@ -470,7 +478,9 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
 
     setLoadingAi(prompt)
     const selection = getSelectionText() as { from: number, to: number, text: string }
-    const selectedText = context || selection.text
+    // Strip base64 image data from context to avoid bloating the /prompt request
+    const rawText = context || selection.text
+    const selectedText = rawText.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[image]')
 
     const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt`, {
       method: 'POST',
@@ -498,6 +508,38 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     }
     editor.commands.insertContent(json.result.trim())
   }
+
+  const insertImageAsBase64 = useCallback((file: File) => {
+    if (!editor) return
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const src = e.target?.result as string
+      if (src) {
+        editor.chain().focus().setImage({ src }).run()
+      }
+    }
+    reader.readAsDataURL(file)
+  }, [editor])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+    if (files.length === 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    files.forEach(insertImageAsBase64)
+  }, [insertImageAsBase64])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = Array.from(e.clipboardData.items).filter(i => i.type.startsWith('image/'))
+    if (items.length === 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    items.forEach(item => {
+      const file = item.getAsFile()
+      if (file) insertImageAsBase64(file)
+    })
+  }, [insertImageAsBase64])
 
   return editor ? <div className="relative space-y-2.5 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex items-center gap-4 justify-between w-full">
@@ -625,6 +667,13 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     <EditorContent
       editor={editor}
       className="pb-4"
+      onDragOver={(e) => {
+        if (Array.from(e.dataTransfer.items).some(i => i.type.startsWith('image/'))) {
+          e.preventDefault()
+        }
+      }}
+      onDrop={handleDrop}
+      onPaste={handlePaste}
     />
     {/* Mobile Drawer for Tone */}
     {isMobile && (

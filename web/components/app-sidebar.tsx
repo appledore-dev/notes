@@ -133,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   Notes AI Assistant
                 </span>
                 <span className="text-muted-foreground text-xs">
-                  by <a href="https://x.com/mgilangjanuar" target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4">mgilangjanuar</a>
+                  by <a href="https://github.com/mgilangjanuar" target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4">mgilangjanuar</a>
                 </span>
               </div>
             </SidebarMenuButton>

@@ -7,6 +7,7 @@ import {
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider
+      defaultOpen={false}
       style={
         {
           "--sidebar-width": "19rem",
