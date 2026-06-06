@@ -224,7 +224,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'max-w-full rounded-md my-2',
+          class: 'max-w-full rounded-md mt-6',
         },
       }),
     ],
