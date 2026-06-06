@@ -10,6 +10,7 @@ import {
   SidebarTrigger
 } from '@/components/ui/sidebar'
 import { useUser } from '@/hooks/use-user'
+import { Editor } from '@tiptap/react'
 import { Content } from '@tiptap/react'
 import { Edit3Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -27,6 +28,7 @@ export default function Page() {
     return null
   }, [])
   const [loading, setLoading] = useState(false)
+  const [editor, setEditor] = useState<Editor | null>(null)
 
   return <>
     <header className="flex h-16 shrink-0 items-center gap-6 justify-between px-4">
@@ -36,25 +38,19 @@ export default function Page() {
           orientation="vertical"
           className="mr-2 data-[orientation=vertical]:h-4"
         />
-        <div className="grid grid-cols-1 text-sm">
+        <div className="grid grid-cols-1 text-sm flex-1 min-w-0">
           <span className="truncate">
             Untitled Document
           </span>
         </div>
-      </div>
-    </header>
-    <div className="flex flex-1 flex-col gap-4 p-4 py-0">
-      <TiptapEditor
-        defaultValue={defaultValue}
-        onChange={content => localStorage.setItem('tiptap-content', JSON.stringify(content))}
-        action={(editor) => user ? <Dialog>
+        {user ? <Dialog>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-2">
+            <Button size="sm" className="gap-2" disabled={!editor}>
               <Edit3Icon className="!size-3.5" />
               Save
             </Button>
           </DialogTrigger>
-          <DialogContent>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>
                 Save Document
@@ -65,6 +61,7 @@ export default function Page() {
             </DialogHeader>
             <form onSubmit={async e => {
               e.preventDefault()
+              if (!editor) return
               setLoading(true)
               const formData = new FormData(e.currentTarget)
               const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs`, {
@@ -123,6 +120,13 @@ export default function Page() {
             Save
           </Button>
         </DialogLogin>}
+      </div>
+    </header>
+    <div className="flex flex-1 flex-col gap-4 p-4 py-0">
+      <TiptapEditor
+        defaultValue={defaultValue}
+        onChange={content => localStorage.setItem('tiptap-content', JSON.stringify(content))}
+        onEditorReady={setEditor}
       />
     </div>
   </>

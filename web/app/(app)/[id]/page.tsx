@@ -10,7 +10,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useUser } from '@/hooks/use-user'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { JSONContent } from '@tiptap/react'
+import { Editor, JSONContent } from '@tiptap/react'
 import { CheckIcon, Trash2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
@@ -29,6 +29,7 @@ export default function Page() {
     content_html: string
   } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [editor, setEditor] = useState<Editor | null>(null)
 
     const fetchDoc = useCallback(async () => {
       if (user === null) r.replace('/')
@@ -61,7 +62,7 @@ export default function Page() {
           orientation="vertical"
           className="mr-2 data-[orientation=vertical]:h-4"
         />
-        <div className="grid grid-cols-1 text-sm">
+        <div className="grid grid-cols-1 text-sm flex-1 min-w-0">
           <Dialog>
             <DialogTrigger asChild>
               <span className="truncate hover:cursor-pointer">
@@ -133,18 +134,12 @@ export default function Page() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
-    </header>
-    <div className="flex flex-1 flex-col gap-4 p-4 py-0">
-      <TiptapEditor
-        defaultValue={doc?.content_json || null}
-        onChange={setValue}
-        action={(editor) => <div className="flex gap-2">
+        <div className="flex gap-2 items-center shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0}>
                 <Button size="sm" onClick={async () => {
-                  if (!user) return
+                  if (!user || !editor) return
                   setLoading(true)
                   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/docs/${doc?.id}`, {
                     method: 'PUT',
@@ -165,11 +160,11 @@ export default function Page() {
                     const data = await res.json()
                     setDoc(data?.doc || null)
                   }
-                }} disabled={loading || doc?.content_text === editor.getText()} className="gap-2">
+                }} disabled={loading || !editor || doc?.content_text === editor?.getText()} className="gap-2">
                   <span className="hidden md:inline">
-                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : doc?.content_text === editor.getText() ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
+                    {loading ? <ReloadIcon className="animate-spin !size-3.5" /> : doc?.content_text === editor?.getText() ? <CheckIcon className="!size-3.5" /> : <TriangleAlertIcon className="!size-3.5" />}
                   </span>
-                  {doc?.content_text === editor.getText() ? 'Updated' : 'Update'}
+                  {doc?.content_text === editor?.getText() ? 'Updated' : 'Update'}
                 </Button>
               </span>
             </TooltipTrigger>
@@ -222,7 +217,14 @@ export default function Page() {
               </div>
             </PopoverContent>
           </Popover>
-        </div>}
+        </div>
+      </div>
+    </header>
+    <div className="flex flex-1 flex-col gap-4 p-4 py-0">
+      <TiptapEditor
+        defaultValue={doc?.content_json || null}
+        onChange={setValue}
+        onEditorReady={setEditor}
       />
     </div>
   </>

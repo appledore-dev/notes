@@ -144,11 +144,12 @@ const OnBlurHighlight = Extension.create({
   },
 })
 
-export default function TiptapEditor({ defaultValue, action, onChange, onSave }: {
+export default function TiptapEditor({ defaultValue, action, onChange, onSave, onEditorReady }: {
   defaultValue?: Content,
   action?: (editor: Editor) => ReactNode,
   onChange?: (value: JSONContent, editor: Editor) => void,
   onSave?: (values: { json: JSONContent, html: string }, editor: Editor) => void,
+  onEditorReady?: (editor: Editor) => void,
 }) {
   const isMobile = useIsMobile()
   const [openPopoverLink, setOpenPopoverLink] = useState(false)
@@ -157,6 +158,9 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       attributes: {
         class: cn('py-4 !h-[calc(100svh-2rem-36px-58px)] overflow-y-auto no-scrollbar focus:outline-none'),
       },
+    },
+    onCreate({ editor }) {
+      onEditorReady?.(editor)
     },
     extensions: [
       StarterKit,
@@ -543,7 +547,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
 
   return editor ? <div className="relative space-y-2.5 flex flex-col w-full justify-start max-w-prose mx-auto">
     <div className="flex items-center gap-4 justify-between w-full">
-      <div className="flex gap-1.5 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5 flex-1">
+      <div className="flex gap-1.5 items-center overflow-x-auto no-scrollbar flex-nowrap p-0.5">
         <Select
           defaultValue="p"
           value={editor.isActive('heading') ? editor.getAttributes('heading').level.toString() : 'p'}
@@ -662,7 +666,6 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
           <ListIcon className="!size-3.5" />
         </Button>
       </div>
-      {action ? action(editor) : <></>}
     </div>
     <EditorContent
       editor={editor}
