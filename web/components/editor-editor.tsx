@@ -281,6 +281,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
 
     setLoadingAi(prompt)
     const selection = getSelectionText() as { from: number, to: number, text: string }
+    const selectedText = context || selection.text
 
     const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt`, {
       method: 'POST',
@@ -289,7 +290,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       },
       body: JSON.stringify({
         prompt: prompt,
-        context: context || selection.text,
+        context: selectedText,
       }),
     })
     setLoadingAi(undefined)

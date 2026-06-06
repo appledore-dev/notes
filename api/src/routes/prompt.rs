@@ -1,19 +1,23 @@
 use axum::{
-    Json,
     http::StatusCode,
+    Json,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{to_string};
+use serde_json::to_string;
 
 pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<PromptResponse>) {
-    let api_key = std::env::var("GOOGLE_GENERATIVE_AI_API_KEY").expect("GOOGLE_GENERATIVE_AI_API_KEY must be set");
+    let prompt = payload.prompt;
+    let context = payload.context;
+
+    let api_key = std::env::var("9ROUTER_AI_API_KEY").expect("9ROUTER_AI_API_KEY must be set");
     let body = AIRequest {
+        model: default_model(),
         contents: vec![
             AIContent {
                 role: "user".to_string(),
                 parts: vec![
                     AIPart {
-                        text: format!("The selected text is: {}", payload.context),
+                        text: format!("The selected text is: {}", context),
                     },
                 ],
             },
@@ -26,7 +30,7 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
                         "You are a helpful writing assistant. Please help the user to replace the selected text.\n\n",
                         "Your task is: {}\n\n",
                         "Make sure to provide only exact 1 option as a response."
-                    ), payload.prompt),
+                    ), prompt),
                 },
             ],
         },
@@ -40,9 +44,10 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
     };
 
     let client = reqwest::Client::new();
-    let resp = client.post(format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={}", api_key))
+    let resp = client.post("https://router.helpedby.ai/v1/chat/completions")
         .body(to_string(&body).unwrap())
         .header("Content-Type", "application/json")
+        .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await;
     match resp {
@@ -77,9 +82,14 @@ pub enum PromptResponse {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AIRequest {
+    model: String,
     contents: Vec<AIContent>,
     system_instruction: AIContent,
     generation_config: AIGenerationConfig,
+}
+
+fn default_model() -> String {
+    "basic.free".to_string()
 }
 
 #[derive(Serialize)]
