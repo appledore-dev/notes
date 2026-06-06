@@ -269,7 +269,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState<number>(0)
   const [selectedToneIndex, setSelectedToneIndex] = useState<number>(0)
   const [selectedMainIndex, setSelectedMainIndex] = useState<number>(0)
-  const [openDrawer, setOpenDrawer] = useState<boolean>(false)
+  const [openDrawer, setOpenDrawer] = useState<string | undefined>()
 
   const popoverOpenRef = useRef(false)
   const setOpenPopover = (val: string | undefined) => {
@@ -316,13 +316,18 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   const menuHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null)
 
   const openToneMenu = () => {
+    if (isMobile) {
+      setOpenDrawer('tone')
+      return
+    }
+
     setOpenPopover('tone')
     setSelectedToneIndex(0)
   }
 
   const openTranslateMenu = () => {
     if (isMobile) {
-      setOpenDrawer(true)
+      setOpenDrawer('translate')
       return
     }
 
@@ -632,58 +637,96 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
           {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
           Fix spelling & grammar
         </Button>
-        <Popover open={openPopover === 'tone'} onOpenChange={o => {
-          setOpenPopover(o ? 'tone' : undefined)
-          setSelectedToneIndex(0)
-        }}>
-          <PopoverTrigger asChild>
-            <Button
-              size="sm"
-              data-main-index="2"
-              className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')}
-              variant="ghost"
-              disabled={!!loadingAi}
-              onKeyDownCapture={(event) => {
-                if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
-
-                event.preventDefault()
-                event.stopPropagation()
-                openToneMenu()
-              }}
-            >
-              <div className="flex items-center gap-2">
-                {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
-                <span>Rephrase with tone...</span>
-              </div>
-              <ChevronRightIcon className="!size-3.5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            side="right"
-            align="start"
-            className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
-            sideOffset={12}
-            alignOffset={0}
-            ref={toneContentRef}
-          >
-            {TONES.map((tone, index) => (
-              <Button
-                key={tone}
-                size="sm"
-                className={cn('font-normal w-full justify-start', {
-                  'bg-accent text-accent-foreground': index === selectedToneIndex,
-                })}
-                variant="ghost"
-                onClick={() => runAi(`rephrase with ${tone.toLowerCase()} tone`)}
-                disabled={!!loadingAi}
-              >
-                {tone}
-              </Button>
-            ))}
-          </PopoverContent>
-        </Popover>
         {isMobile ? (
-          <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
+          <Drawer open={openDrawer === 'tone'} onOpenChange={o => setOpenDrawer(o ? 'tone' : undefined)}>
+            <DrawerTrigger asChild>
+              <Button size="sm" data-main-index="2" className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" disabled={!!loadingAi}>
+                <div className="flex items-center gap-2">
+                  {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+                  <span>Rephrase with tone...</span>
+                </div>
+                <ChevronRightIcon className="!size-3.5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="flex flex-col gap-0">
+              <DrawerHeader>
+                <DrawerTitle>Rephrase with tone</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex-1 overflow-y-auto no-scrollbar px-4">
+                <div className="grid grid-cols-2 gap-2 pb-4">
+                  {TONES.map((tone) => (
+                    <Button
+                      key={tone}
+                      size="sm"
+                      className="font-normal justify-start text-sm"
+                      variant="outline"
+                      onClick={() => {
+                        runAi(`rephrase with ${tone.toLowerCase()} tone`)
+                        setOpenDrawer(undefined)
+                      }}
+                      disabled={!!loadingAi}
+                    >
+                      {tone}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Popover open={openPopover === 'tone'} onOpenChange={o => {
+            setOpenPopover(o ? 'tone' : undefined)
+            setSelectedToneIndex(0)
+          }}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                data-main-index="2"
+                className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')}
+                variant="ghost"
+                disabled={!!loadingAi}
+                onKeyDownCapture={(event) => {
+                  if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+
+                  event.preventDefault()
+                  event.stopPropagation()
+                  openToneMenu()
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+                  <span>Rephrase with tone...</span>
+                </div>
+                <ChevronRightIcon className="!size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="right"
+              align="start"
+              className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
+              sideOffset={12}
+              alignOffset={0}
+              ref={toneContentRef}
+            >
+              {TONES.map((tone, index) => (
+                <Button
+                  key={tone}
+                  size="sm"
+                  className={cn('font-normal w-full justify-start', {
+                    'bg-accent text-accent-foreground': index === selectedToneIndex,
+                  })}
+                  variant="ghost"
+                  onClick={() => runAi(`rephrase with ${tone.toLowerCase()} tone`)}
+                  disabled={!!loadingAi}
+                >
+                  {tone}
+                </Button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        )}
+        {isMobile ? (
+          <Drawer open={openDrawer === 'translate'} onOpenChange={o => setOpenDrawer(o ? 'translate' : undefined)}>
             <DrawerTrigger asChild>
               <Button size="sm" data-main-index="3" className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" disabled={!!loadingAi}>
                 <div className="flex gap-2 items-center">
@@ -707,7 +750,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
                       variant="outline"
                       onClick={() => {
                         runAi(`translate to ${lang.name}`)
-                        setOpenDrawer(false)
+                        setOpenDrawer(undefined)
                       }}
                       disabled={!!loadingAi}
                     >
