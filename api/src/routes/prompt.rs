@@ -9,7 +9,7 @@ pub async fn handler(Json(payload): Json<PromptRequest>) -> (StatusCode, Json<Pr
     let prompt = payload.prompt;
     let context = payload.context;
 
-    let api_key = std::env::var("9ROUTER_AI_API_KEY").expect("9ROUTER_AI_API_KEY must be set");
+    let api_key = std::env::var("ROUTER_AI_API_KEY").expect("ROUTER_AI_API_KEY must be set");
     let body = AIRequest {
         model: default_model(),
         contents: vec![
