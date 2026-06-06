@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -39,6 +39,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
 import {
   BoldIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   CodeIcon,
   DramaIcon,
@@ -61,6 +62,8 @@ import {
 } from 'lucide-react'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
+type BubbleMenuPage = 'main' | 'tone' | 'translate'
 
 const lowlight = createLowlight(all)
 
@@ -265,16 +268,37 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   // }, [])
 
   const [loadingAi, setLoadingAi] = useState<string>()
-  const [openPopover, _setOpenPopover] = useState<string>()
+  const [desktopMenuPage, setDesktopMenuPage] = useState<BubbleMenuPage>('main')
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState<number>(0)
   const [selectedToneIndex, setSelectedToneIndex] = useState<number>(0)
   const [selectedMainIndex, setSelectedMainIndex] = useState<number>(0)
-  const [openDrawer, setOpenDrawer] = useState<string | undefined>()
+  const [openDrawer, setOpenDrawer] = useState<BubbleMenuPage | undefined>()
 
-  const popoverOpenRef = useRef(false)
-  const setOpenPopover = (val: string | undefined) => {
-    popoverOpenRef.current = !!val
-    _setOpenPopover(val)
+  const closeActiveMenu = () => {
+    setDesktopMenuPage('main')
+    setOpenDrawer(undefined)
+  }
+
+  const activeMenuPage: BubbleMenuPage = isMobile ? openDrawer ?? 'main' : desktopMenuPage
+
+  const openToneMenu = () => {
+    setSelectedToneIndex(0)
+    if (isMobile) {
+      setOpenDrawer('tone')
+      return
+    }
+
+    setDesktopMenuPage('tone')
+  }
+
+  const openTranslateMenu = () => {
+    setSelectedLanguageIndex(0)
+    if (isMobile) {
+      setOpenDrawer('translate')
+      return
+    }
+
+    setDesktopMenuPage('translate')
   }
 
   const bubbleMenuRef = useRef<HTMLDivElement>(null)
@@ -315,33 +339,13 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
 
   const menuHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null)
 
-  const openToneMenu = () => {
-    if (isMobile) {
-      setOpenDrawer('tone')
-      return
-    }
-
-    setOpenPopover('tone')
-    setSelectedToneIndex(0)
-  }
-
-  const openTranslateMenu = () => {
-    if (isMobile) {
-      setOpenDrawer('translate')
-      return
-    }
-
-    setOpenPopover('translate')
-    setSelectedLanguageIndex(0)
-  }
-
   menuHandlerRef.current = (e: KeyboardEvent) => {
     if (e.shiftKey && e.key.startsWith('Arrow')) return
 
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) return
 
     const { from, to } = editor!.state.selection
-    const isBubbleMenuVisible = popoverOpenRef.current || (editor!.isFocused && from !== to)
+    const isBubbleMenuVisible = desktopMenuPage !== 'main' || openDrawer !== undefined || (editor!.isFocused && from !== to)
     const textBefore = editor!.state.doc.textBetween(from - 1, to)
     const isFloatingMenuVisible = editor!.isFocused && textBefore.endsWith('/') && editor!.state.selection.empty
 
@@ -350,7 +354,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     e.preventDefault()
     e.stopPropagation()
 
-    if (openPopover === 'tone') {
+    if (activeMenuPage === 'tone') {
       if (e.key === 'ArrowDown') {
         setSelectedToneIndex(prev => prev < TONES.length - 1 ? prev + 1 : prev)
       } else if (e.key === 'ArrowUp') {
@@ -358,12 +362,12 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       } else if (e.key === 'Enter') {
         runAi(`rephrase with ${TONES[selectedToneIndex].toLowerCase()} tone`)
       } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
-        setOpenPopover(undefined)
+        closeActiveMenu()
       }
       return
     }
 
-    if (openPopover === 'translate') {
+    if (activeMenuPage === 'translate') {
       if (e.key === 'ArrowDown') {
         setSelectedLanguageIndex(prev => prev < LANGUAGES.length - 1 ? prev + 1 : prev)
       } else if (e.key === 'ArrowUp') {
@@ -371,7 +375,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       } else if (e.key === 'Enter') {
         runAi(`translate to ${LANGUAGES[selectedLanguageIndex].name}`)
       } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
-        setOpenPopover(undefined)
+        closeActiveMenu()
       }
       return
     }
@@ -379,7 +383,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
     if (isFloatingMenuVisible) {
       if (e.key === 'Enter') {
         const selection = getSelectionText()
-        const context = editor!.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
+        const context = editor!.state.doc.textBetween(0, selection?.to || 0, '').replaceAll('/', '').trim()
         if (!context) {
           toast('Error', {
             description: 'Please write something before using this feature.',
@@ -425,28 +429,31 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
   }, [editor])
 
   useEffect(() => {
-    if (!openPopover && bubbleMenuRef.current && !bubbleMenuRef.current.closest('.hidden')) {
+    if (desktopMenuPage === 'main' && !openDrawer && bubbleMenuRef.current && !bubbleMenuRef.current.closest('.hidden')) {
       bubbleMenuRef.current.focus()
     }
-  }, [openPopover])
+  }, [desktopMenuPage, openDrawer])
 
   useEffect(() => {
+    if (desktopMenuPage !== 'main') return
     if (!bubbleMenuRef.current) return
     const selected = bubbleMenuRef.current.querySelector<HTMLElement>(`[data-main-index="${selectedMainIndex}"]`)
     selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [selectedMainIndex])
+  }, [desktopMenuPage, selectedMainIndex])
 
   useEffect(() => {
+    if (desktopMenuPage !== 'tone' && openDrawer !== 'tone') return
     if (!toneContentRef.current) return
     const selected = toneContentRef.current.children[selectedToneIndex] as HTMLElement
     selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [selectedToneIndex])
+  }, [desktopMenuPage, openDrawer, selectedToneIndex])
 
   useEffect(() => {
+    if (desktopMenuPage !== 'translate' && openDrawer !== 'translate') return
     if (!translateContentRef.current) return
     const selected = translateContentRef.current.children[selectedLanguageIndex] as HTMLElement
     selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [selectedLanguageIndex])
+  }, [desktopMenuPage, openDrawer, selectedLanguageIndex])
   const getSelectionText = () => {
     if (!editor) return null
     const { view, state } = editor
@@ -476,7 +483,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       }),
     })
     setLoadingAi(undefined)
-    setOpenPopover(undefined)
+    closeActiveMenu()
 
     if (!resp.ok) {
       toast('Error', {
@@ -619,212 +626,196 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       editor={editor}
       className="pb-4"
     />
-    <BubbleMenu
-      editor={editor}
-      tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
-      shouldShow={({ editor, from, to }) => {
-        if (popoverOpenRef.current) return true
-        return editor.isFocused && from !== to
-      }}
-      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50', editor?.isEditable ? '' : 'hidden')}
-    >
-      <div ref={bubbleMenuRef} tabIndex={-1} className="contents">
-        <Button size="sm" data-main-index="0" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 0 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
-          {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
-          Simplify
-        </Button>
-        <Button size="sm" data-main-index="1" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 1 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('fix spelling and grammar')} disabled={!!loadingAi}>
-          {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
-          Fix spelling & grammar
-        </Button>
-        {isMobile ? (
-          <Drawer open={openDrawer === 'tone'} onOpenChange={o => setOpenDrawer(o ? 'tone' : undefined)}>
-            <DrawerTrigger asChild>
-              <Button size="sm" data-main-index="2" className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" disabled={!!loadingAi}>
-                <div className="flex items-center gap-2">
-                  {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
-                  <span>Rephrase with tone...</span>
-                </div>
-                <ChevronRightIcon className="!size-3.5" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="flex flex-col gap-0">
-              <DrawerHeader>
-                <DrawerTitle>Rephrase with tone</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex-1 overflow-y-auto no-scrollbar px-4">
-                <div className="grid grid-cols-2 gap-2 pb-4">
-                  {TONES.map((tone) => (
-                    <Button
-                      key={tone}
-                      size="sm"
-                      className="font-normal justify-start text-sm"
-                      variant="outline"
-                      onClick={() => {
-                        runAi(`rephrase with ${tone.toLowerCase()} tone`)
-                        setOpenDrawer(undefined)
-                      }}
-                      disabled={!!loadingAi}
-                    >
-                      {tone}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        ) : (
-          <Popover open={openPopover === 'tone'} onOpenChange={o => {
-            setOpenPopover(o ? 'tone' : undefined)
-            setSelectedToneIndex(0)
-          }}>
-            <PopoverTrigger asChild>
-              <Button
-                size="sm"
-                data-main-index="2"
-                className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && !openPopover && 'bg-accent text-accent-foreground')}
-                variant="ghost"
-                disabled={!!loadingAi}
-                onKeyDownCapture={(event) => {
-                  if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
-
-                  event.preventDefault()
-                  event.stopPropagation()
-                  openToneMenu()
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
-                  <span>Rephrase with tone...</span>
-                </div>
-                <ChevronRightIcon className="!size-3.5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              side="right"
-              align="start"
-              className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
-              sideOffset={12}
-              alignOffset={0}
-              ref={toneContentRef}
-            >
+    {/* Mobile Drawer for Tone */}
+    {isMobile && (
+      <Drawer open={openDrawer === 'tone'} onOpenChange={open => setOpenDrawer(open ? 'tone' : undefined)}>
+        <DrawerContent className="flex flex-col gap-0">
+          <DrawerHeader>
+            <DrawerTitle>Rephrase with tone</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4">
+            <div ref={toneContentRef} className="grid grid-cols-2 gap-2">
               {TONES.map((tone, index) => (
                 <Button
                   key={tone}
                   size="sm"
-                  className={cn('font-normal w-full justify-start', {
+                  className={cn('font-normal justify-start text-sm', {
                     'bg-accent text-accent-foreground': index === selectedToneIndex,
                   })}
-                  variant="ghost"
-                  onClick={() => runAi(`rephrase with ${tone.toLowerCase()} tone`)}
+                  variant="outline"
+                  onClick={() => {
+                    runAi(`rephrase with ${tone.toLowerCase()} tone`)
+                    setOpenDrawer(undefined)
+                  }}
                   disabled={!!loadingAi}
                 >
                   {tone}
                 </Button>
               ))}
-            </PopoverContent>
-          </Popover>
-        )}
-        {isMobile ? (
-          <Drawer open={openDrawer === 'translate'} onOpenChange={o => setOpenDrawer(o ? 'translate' : undefined)}>
-            <DrawerTrigger asChild>
-              <Button size="sm" data-main-index="3" className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" disabled={!!loadingAi}>
-                <div className="flex gap-2 items-center">
-                  {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
-                  <span>Translate to...</span>
-                </div>
-                <ChevronRightIcon className="!size-3.5" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="flex flex-col gap-0">
-              <DrawerHeader>
-                <DrawerTitle>Translate to</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex-1 overflow-y-auto no-scrollbar px-4">
-                <div className="grid grid-cols-2 gap-2 pb-4">
-                  {LANGUAGES.map((lang) => (
-                    <Button
-                      key={lang.code}
-                      size="sm"
-                      className="font-normal justify-start text-sm"
-                      variant="outline"
-                      onClick={() => {
-                        runAi(`translate to ${lang.name}`)
-                        setOpenDrawer(undefined)
-                      }}
-                      disabled={!!loadingAi}
-                    >
-                      {lang.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        ) : (
-          <Popover open={openPopover === 'translate'} onOpenChange={o => {
-            setOpenPopover(o ? 'translate' : undefined)
-            setSelectedLanguageIndex(0)
-          }}>
-            <PopoverTrigger asChild>
-              <Button
-                size="sm"
-                data-main-index="3"
-                className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && !openPopover && 'bg-accent text-accent-foreground')}
-                variant="ghost"
-                disabled={!!loadingAi}
-                onKeyDownCapture={(event) => {
-                  if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )}
 
-                  event.preventDefault()
-                  event.stopPropagation()
-                  openTranslateMenu()
-                }}
-              >
-                <div className="flex gap-2 items-center">
-                  {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
-                  <span>Translate to...</span>
-                </div>
-                <ChevronRightIcon className="!size-3.5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              side="right"
-              align="start"
-              className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40"
-              sideOffset={12}
-              alignOffset={0}
-              ref={translateContentRef}
-            >
+    {/* Mobile Drawer for Translate */}
+    {isMobile && (
+      <Drawer open={openDrawer === 'translate'} onOpenChange={open => setOpenDrawer(open ? 'translate' : undefined)}>
+        <DrawerContent className="flex flex-col gap-0">
+          <DrawerHeader>
+            <DrawerTitle>Translate to</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4">
+            <div ref={translateContentRef} className="grid grid-cols-2 gap-2">
               {LANGUAGES.map((lang, index) => (
                 <Button
                   key={lang.code}
                   size="sm"
-                  className={cn('font-normal w-full justify-start', {
+                  className={cn('font-normal justify-start text-sm', {
                     'bg-accent text-accent-foreground': index === selectedLanguageIndex,
                   })}
-                  variant="ghost"
-                  onClick={() => runAi(`translate to ${lang.name}`)}
+                  variant="outline"
+                  onClick={() => {
+                    runAi(`translate to ${lang.name}`)
+                    setOpenDrawer(undefined)
+                  }}
                   disabled={!!loadingAi}
                 >
                   {lang.name}
                 </Button>
               ))}
-            </PopoverContent>
-          </Popover>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )}
+
+    <BubbleMenu
+      editor={editor}
+      tippyOptions={{ placement: 'bottom-start', duration: 100, zIndex: 40 }}
+      shouldShow={({ editor, from, to }) => {
+        if (!isMobile && desktopMenuPage !== 'main') return true
+        return editor.isFocused && from !== to
+      }}
+      className={cn('relative flex flex-col gap-0.5 max-h-80 overflow-y-auto no-scrollbar items-start flex-nowrap p-1 rounded-md border shadow-md bg-background z-50 w-56', editor?.isEditable ? '' : 'hidden')}
+    >
+      <div ref={bubbleMenuRef} tabIndex={-1} className="contents">
+        {!isMobile && desktopMenuPage === 'tone' ? (
+          <>
+            <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={closeActiveMenu} disabled={!!loadingAi}>
+              <ChevronLeftIcon className="!size-3.5" />
+              Back
+            </Button>
+            <div ref={toneContentRef} className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40 w-full">
+              {TONES.map((tone, index) => (
+                <Button
+                  key={tone}
+                  size="sm"
+                  className={cn('font-normal w-full justify-start pl-7', {
+                    'bg-accent text-accent-foreground': index === selectedToneIndex,
+                  })}
+                  variant="ghost"
+                  onClick={() => {
+                    runAi(`rephrase with ${tone.toLowerCase()} tone`)
+                    closeActiveMenu()
+                  }}
+                  disabled={!!loadingAi}
+                >
+                  {tone}
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : !isMobile && desktopMenuPage === 'translate' ? (
+          <>
+            <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={closeActiveMenu} disabled={!!loadingAi}>
+              <ChevronLeftIcon className="!size-3.5" />
+              Back
+            </Button>
+            <div ref={translateContentRef} className="p-1 flex flex-col gap-1 overflow-y-auto max-h-96 z-40 w-full">
+              {LANGUAGES.map((lang, index) => (
+                <Button
+                  key={lang.code}
+                  size="sm"
+                  className={cn('font-normal w-full justify-start pl-7', {
+                    'bg-accent text-accent-foreground': index === selectedLanguageIndex,
+                  })}
+                  variant="ghost"
+                  onClick={() => {
+                    runAi(`translate to ${lang.name}`)
+                    closeActiveMenu()
+                  }}
+                  disabled={!!loadingAi}
+                >
+                  {lang.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <Button size="sm" data-main-index="0" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 0 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('simplify')} disabled={!!loadingAi}>
+              {loadingAi === 'simplify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <Edit3Icon className="!size-3.5" />}
+              Simplify
+            </Button>
+            <Button size="sm" data-main-index="1" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 1 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('fix spelling and grammar')} disabled={!!loadingAi}>
+              {loadingAi === 'fix spelling and grammar' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <EraserIcon className="!size-3.5" />}
+              Fix spelling & grammar
+            </Button>
+            <Button
+              size="sm"
+              data-main-index="2"
+              className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 2 && 'bg-accent text-accent-foreground')}
+              variant="ghost"
+              disabled={!!loadingAi}
+              onClick={openToneMenu}
+              onKeyDownCapture={(event) => {
+                if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+                event.preventDefault()
+                event.stopPropagation()
+                openToneMenu()
+              }}
+            >
+              <div className="flex items-center gap-2">
+                {loadingAi?.startsWith('rephrase with') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <DramaIcon className="!size-3.5" />}
+                <span>Rephrase with tone...</span>
+              </div>
+              <ChevronRightIcon className="!size-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              data-main-index="3"
+              className={cn('gap-6 font-normal w-full justify-between', selectedMainIndex === 3 && 'bg-accent text-accent-foreground')}
+              variant="ghost"
+              disabled={!!loadingAi}
+              onClick={openTranslateMenu}
+              onKeyDownCapture={(event) => {
+                if (event.key !== 'Enter' && event.key !== 'ArrowRight') return
+                event.preventDefault()
+                event.stopPropagation()
+                openTranslateMenu()
+              }}
+            >
+              <div className="flex gap-2 items-center">
+                {loadingAi?.startsWith('translate to') ? <ReloadIcon className="!size-3.5 animate-spin" /> : <GlobeIcon className="!size-3.5" />}
+                <span>Translate to...</span>
+              </div>
+              <ChevronRightIcon className="!size-3.5" />
+            </Button>
+            <Button size="sm" data-main-index="4" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 4 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it shorter')} disabled={!!loadingAi}>
+              {loadingAi === 'make it shorter' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListMinusIcon className="!size-3.5" />}
+              Make it shorter
+            </Button>
+            <Button size="sm" data-main-index="5" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 5 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it longer')} disabled={!!loadingAi}>
+              {loadingAi === 'make it longer' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListPlusIcon className="!size-3.5" />}
+              Make it longer
+            </Button>
+            <Button size="sm" data-main-index="6" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 6 && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('emojify')} disabled={!!loadingAi}>
+              {loadingAi === 'emojify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SmilePlusIcon className="!size-3.5" />}
+              Emojify
+            </Button>
+          </>
         )}
-        <Button size="sm" data-main-index="4" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 4 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it shorter')} disabled={!!loadingAi}>
-          {loadingAi === 'make it shorter' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListMinusIcon className="!size-3.5" />}
-          Make it shorter
-        </Button>
-        <Button size="sm" data-main-index="5" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 5 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('make it longer')} disabled={!!loadingAi}>
-          {loadingAi === 'make it longer' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <ListPlusIcon className="!size-3.5" />}
-          Make it longer
-        </Button>
-        <Button size="sm" data-main-index="6" className={cn('gap-2 font-normal w-full justify-start', selectedMainIndex === 6 && !openPopover && 'bg-accent text-accent-foreground')} variant="ghost" onClick={() => runAi('emojify')} disabled={!!loadingAi}>
-          {loadingAi === 'emojify' ? <ReloadIcon className="!size-3.5 animate-spin" /> : <SmilePlusIcon className="!size-3.5" />}
-          Emojify
-        </Button>
       </div>
     </BubbleMenu>
     <FloatingMenu editor={editor} tippyOptions={{ placement: 'bottom-start', zIndex: 50 }} shouldShow={({ state }) => {
@@ -835,7 +826,7 @@ export default function TiptapEditor({ defaultValue, action, onChange, onSave }:
       <div ref={floatingMenuRef} tabIndex={-1} className="contents">
         <Button size="sm" className="gap-2 font-normal w-full justify-start" variant="ghost" onClick={() => {
           const selection = getSelectionText()
-          const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replace(/\//g, '').trim()
+          const context = editor.state.doc.textBetween(0, selection?.to || 0, '').replaceAll('/', '').trim()
           if (!context) {
             toast('Error', {
               description: 'Please write something before using this feature.',
